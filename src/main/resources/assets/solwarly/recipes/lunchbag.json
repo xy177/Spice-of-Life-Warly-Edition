@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "solwarly:lunch",
+  "pattern": [" P ", "P P", "PPP"],
+  "key": { "P": { "item": "minecraft:paper" } },
+  "result": { "item": "solwarly:lunchbag" }
+}
