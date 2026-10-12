@@ -1,0 +1,11 @@
+{
+  "type": "forge:ore_shaped",
+  "pattern": ["BSB", "BFB", "WBW"],
+  "key": {
+    "B": { "item": "minecraft:brick_block" },
+    "S": { "item": "minecraft:stone", "data": 0 },
+    "F": { "item": "minecraft:flint" },
+    "W": { "type": "forge:ore_dict", "ore": "fenceWood" }
+  },
+  "result": { "item": "solwarly:spice_grinder", "count": 1 }
+}

@@ -1,0 +1,10 @@
+{
+  "spice_grinder_working": {
+    "category": "block",
+    "sounds": ["solwarly:spice_grinder_working"]
+  },
+  "spice_grinder_complete": {
+    "category": "block",
+    "sounds": ["solwarly:spice_grinder_complete"]
+  }
+}

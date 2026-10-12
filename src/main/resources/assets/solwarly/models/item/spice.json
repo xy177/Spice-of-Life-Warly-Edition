@@ -1,0 +1,7 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "solwarly:items/spice_powder",
+    "layer1": "solwarly:items/spice_container_paper"
+  }
+}
