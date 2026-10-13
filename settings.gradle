@@ -1,1 +1,3 @@
+// Adapted from Spice of Life: Carrot Edition; original contributors retain copyright.
+// Modified by xy177 on 2026-10-13; LGPL-2.1. See LICENSE.txt and THIRD_PARTY_NOTICES.md.
 rootProject.name = 'Spice-of-Life-Warly-Edition'

@@ -9,7 +9,7 @@
     "authorList": [
       "xy177"
     ],
-    "credits": "Based on Spice of Life:Carrot Edition\nhttps://github.com/Cazsius/Spice-of-Life-Carrot-Edition",
+    "credits": "Based on Spice of Life: Carrot Edition: Cazsius, Talonos, juliand665 and contributors.\nhttps://github.com/Cazsius/Spice-of-Life-Carrot-Edition\nLunch-container textures reused from Spice of Life: Apple Pie Edition (LGPL 2.1).\nhttps://github.com/txnimc/Spice-of-Life-Apple-Pie\nSee THIRD_PARTY_NOTICES.md for original credits, resource sources and inherited licenses.",
     "logoFile": "assets/solwarly/textures/forge/logo.png",
     "screenshots": [],
     "dependencies": [

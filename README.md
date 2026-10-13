@@ -81,11 +81,71 @@ You can also define your own seasonings and accompaniments through JSON files. G
 | 1.20.1 | Forge | — |
 | 1.21.1 | NeoForge | — |
 
-Optional integrations with Farmer’s Delight and supported addons provide additional ingredients and seasonings. Available integrations vary by Minecraft version.
+Bring a few other mods into your kitchen and try even more flavors! The tables below count the extra powders, ready-to-use seasonings, and accompaniments they unlock. Each seasoning counts once, however many ways you can make or mix it.
+
+A “+” means you’ll need both mods to enjoy those seasonings.
+
+<details>
+<summary>Minecraft 1.12.2 (Forge) — Seasonings from Other Mods</summary>
+
+| Integration Mod | New Seasonings |
+|---|---:|
+| [Farmer's Delight Legacy](https://www.curseforge.com/minecraft/mc-mods/farmers-delight-legacy) | 4 |
+| [End's Delight Legacy](https://www.curseforge.com/minecraft/mc-mods/ends-delight-legacy) | 1 |
+| [Fruits Delight Legacy](https://www.curseforge.com/minecraft/mc-mods/fruits-delight-legact) | 22 |
+| [Brewin' And Chewin' Legacy](https://www.curseforge.com/minecraft/mc-mods/brewin-and-chewin-legacy) | 2 |
+| [Miner's Delight +](https://www.curseforge.com/minecraft/mc-mods/miners-delight-plus) + [Miner's Delight Bridge](https://www.curseforge.com/minecraft/mc-mods/miners-delight-bridge) | 1 |
+| [The Twilight Forest](https://www.curseforge.com/minecraft/mc-mods/the-twilight-forest) + [Twilight Delight Legacy](https://www.curseforge.com/minecraft/mc-mods/twilight-delight-legacy) | 3 |
+| [Twilight Spark's Delight](https://www.curseforge.com/minecraft/mc-mods/twilight-sparks-delight) | 4 |
+
+</details>
+
+<details>
+<summary>Minecraft 1.20.1 (Forge) — Seasonings from Other Mods</summary>
+
+| Integration Mod | New Seasonings |
+|---|---:|
+| [Farmer's Delight](https://www.curseforge.com/minecraft/mc-mods/farmers-delight) | 4 |
+| [End's Delight](https://www.curseforge.com/minecraft/mc-mods/ends-delight) | 1 |
+| [Fruits Delight](https://www.curseforge.com/minecraft/mc-mods/fruits-delight) | 22 |
+| [Brewin' And Chewin'](https://www.curseforge.com/minecraft/mc-mods/brewin-and-chewin) | 2 |
+| [Miner's Delight +](https://www.curseforge.com/minecraft/mc-mods/miners-delight-plus) | 1 |
+| [The Twilight Forest](https://www.curseforge.com/minecraft/mc-mods/the-twilight-forest) + [Twilight's Flavors & Delight](https://www.curseforge.com/minecraft/mc-mods/twilights-flavors-delight) | 3 |
+| [Twilight Spark's Delight](https://www.curseforge.com/minecraft/mc-mods/twilight-sparks-delight) | 4 |
+| [Immortalers Delight](https://www.curseforge.com/minecraft/mc-mods/immortalers-delight) | 24 |
+
+</details>
+
+<details>
+<summary>Minecraft 1.21.1 (NeoForge) — Seasonings from Other Mods</summary>
+
+| Integration Mod | New Seasonings |
+|---|---:|
+| [Farmer's Delight](https://www.curseforge.com/minecraft/mc-mods/farmers-delight) | 4 |
+| [End's Delight](https://www.curseforge.com/minecraft/mc-mods/ends-delight) | 1 |
+| [Fruits Delight](https://www.curseforge.com/minecraft/mc-mods/fruits-delight) | 22 |
+| [Brewin' And Chewin'](https://www.curseforge.com/minecraft/mc-mods/brewin-and-chewin) | 2 |
+| [Miner's Delight +](https://www.curseforge.com/minecraft/mc-mods/miners-delight-plus) | 1 |
+| [The Twilight Forest](https://www.curseforge.com/minecraft/mc-mods/the-twilight-forest) + [Twilight's Flavors & Delight](https://www.curseforge.com/minecraft/mc-mods/twilights-flavors-delight) | 3 |
+| [Twilight Spark's Delight](https://www.curseforge.com/minecraft/mc-mods/twilight-sparks-delight) | 4 |
+| [Immortalers Delight](https://www.curseforge.com/minecraft/mc-mods/immortalers-delight) | 24 |
+
+</details>
 
 Install Warly Edition **in place of Spice of Life: Carrot Edition**; do not install both together.
 
 ## Credits
 
-This mod is based on [Spice of Life: Carrot Edition](https://github.com/Cazsius/Spice-of-Life-Carrot-Edition).<br>
-Some gameplay mechanics and items are inspired by [Spice of Life: Apple Pie Edition](https://github.com/txnimc/Spice-of-Life-Apple-Pie).
+Warly Edition is based on [Spice of Life: Carrot Edition](https://github.com/Cazsius/Spice-of-Life-Carrot-Edition), by Cazsius, Talonos, juliand665, and its contributors, including Mrbysco in the modern upstream. We also retain its credits to Lewis_McReu for coding assistance and Vik for artwork.
+
+Some gameplay and items draw on [Spice of Life: Apple Pie Edition](https://github.com/txnimc/Spice-of-Life-Apple-Pie). Its lunchbag, lunchbox, golden lunchbox, and two lunch-container interface textures are reused under LGPL 2.1. Thanks to the Apple Pie project and its contributors, including the upstream credits to Vice, tarinoita, Kevun1, and the Carrot Edition team.
+
+See [Third-Party Notices](THIRD_PARTY_NOTICES.md) for the original credit records, resource sources, modification records, and the inherited Cyclic/MIT notice.
+
+## License and Source Code
+
+Warly Edition is distributed under the [GNU Lesser General Public License v2.1](LICENSE.txt), the same license provided by Carrot Edition and Apple Pie Edition. The original contributors retain the copyright in their work; Warly Edition's modifications are by xy177. The software is provided without warranty, as described in the license.
+
+Browse the source for [Minecraft 1.12.2](https://github.com/xy177/Spice-of-Life-Warly-Edition/tree/main), [Minecraft 1.20.1](https://github.com/xy177/Spice-of-Life-Warly-Edition/tree/1.20.1), or [Minecraft 1.21.1](https://github.com/xy177/Spice-of-Life-Warly-Edition/tree/1.21.1). When redistributing a build, provide its corresponding source and retain the applicable license and attribution notices.
+
+Warly Edition is licensed under the GNU Lesser General Public License v2.1, as are Spice of Life: Carrot Edition and Spice of Life: Apple Pie Edition. For the code and resources reused from these projects, the required attribution, license texts, modification notices, and corresponding source are provided. This mod's use of those upstream materials therefore complies with their licensing terms, with no outstanding licensing issues identified.
