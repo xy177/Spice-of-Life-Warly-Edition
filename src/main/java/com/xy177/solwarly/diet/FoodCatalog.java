@@ -37,7 +37,15 @@ public final class FoodCatalog {
             if(server==null)StartupRecipes.load().addTo(graph);else WorldRecipes.add(graph,server);
             FarmerRecipes.addServings(graph);
             SOLWarly.LOGGER.info("Starting food preparation analysis: {} missing coefficients",missing.size());
-            difficulties=graph.analyze(missing);outputs=graph.outputs();
+            int[] completed={0};long[] lastProgress={0};
+            difficulties=graph.analyzeTargets(missing,id-> {
+                long now=System.nanoTime();
+                if(completed[0]==0||now-lastProgress[0]>=2_000_000_000L) {
+                    SOLWarly.LOGGER.info("Analyzing food preparation: {}/{} ({})",completed[0],missing.size(),id);
+                    lastProgress[0]=now;
+                }
+                completed[0]++;
+            });outputs=graph.outputs();
         }else SOLWarly.LOGGER.info("Food coefficients are complete; skipping preparation analysis");
         for(var entry:foods.entrySet()) {
             String id=entry.getKey();Configuration.Property property=config.getCategory("foods").get(id);
