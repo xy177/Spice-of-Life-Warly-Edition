@@ -69,10 +69,16 @@ public final class DietRuntime {
         if (!FoodList.get(player).getConfigInfo().shouldCount(food)) return;
         FlavorAPI.Flavor flavor = FlavorAPI.resolve(food);
         double base = FoodCatalog.coefficient(food);
-        data.eat(id, flavor.id, base, base * appetite.multiplier(id) * flavor.diversityMultiplier * repeat, DietConfig.recentCount);
+        data.eat(id, flavor.id, base, contribution(player, food, base * appetite.multiplier(id) * flavor.diversityMultiplier * repeat), DietConfig.recentCount);
         appetite.eat(id);
     }
 
+    public static double contribution(EntityPlayer player, net.minecraft.item.ItemStack food, double normal) {
+        if (!com.xy177.solwarly.spice.Seasoning.creative(food)) return normal;
+        boolean client = player.world.isRemote;
+        return Math.max(0, DietRewards.tier(Double.MAX_VALUE, client ? clientAttributes : DietConfig.attributes,
+            client ? clientEffects : DietConfig.effects));
+    }
     public static long currentClock(World world) {
         if (world.isRemote) return clientWarlyClock + Math.max(0, world.getTotalWorldTime() - clientWarlyTotalTime);
         World overworld = world.getMinecraftServer().getWorld(0);

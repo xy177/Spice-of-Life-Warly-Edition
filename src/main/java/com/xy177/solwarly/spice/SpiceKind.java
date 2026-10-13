@@ -35,6 +35,9 @@ public class SpiceKind implements Comparable<SpiceKind> {
     public static final SpiceKind FRUIT_BAYBERRY = new SpiceKind("FRUIT_BAYBERRY", 0x541135); public static final SpiceKind FRUIT_KIWI = new SpiceKind("FRUIT_KIWI", 0x89D90D); public static final SpiceKind FRUIT_FIG = new SpiceKind("FRUIT_FIG", 0xE08517); public static final SpiceKind FRUIT_DURIAN = new SpiceKind("FRUIT_DURIAN", 0xEDD955);
     public static final SpiceKind BEEF = new SpiceKind("BEEF", 0x985643, "minecraft:strength", "minecraft:cooked_beef");
 
+    public static final SpiceKind CREATIVE = new SpiceKind("CREATIVE", 0xEBC978, null, null);
+    public boolean accompaniment() { return this == RICE; }
+
     private final String name;
     private final int ordinal;
     public final int defaultColor;

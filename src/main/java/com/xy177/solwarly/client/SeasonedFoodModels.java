@@ -46,17 +46,9 @@ public final class SeasonedFoodModels {
                 IBakedModel resolved = unwrap(originalModel.getOverrides().handleItemState(originalModel, stack, world, entity));
                 List<SpiceKind> components = Seasoning.components(stack);
                 if (!Seasoning.seasoned(stack) || components.isEmpty()) return resolved;
-                ItemStack badge;
-                if (components.get(0) == SpiceKind.RICE) {
-                    Item rice = Item.getByNameOrId("farmersdelight:cooked_rice");
-                    if (rice == null) return resolved;
-                    badge = new ItemStack(rice);
-                } else {
-                    badge = Seasoning.powder(components, 1);
-                    badge.getTagCompound().setInteger(ItemSpice.COLOR_KEY, Seasoning.color(stack));
-                }
-                IBakedModel badgeModel = Minecraft.getMinecraft().getRenderItem().getItemModelWithOverrides(badge, world, entity);
-                return new SeasonedModel(resolved, badgeModel, badge);
+                List<ItemStack> badges = Seasoning.badges(stack);
+                return new SeasonedModel(resolved, badges);
+
             }
         };
         FoodModel(IBakedModel original) { super(original); }
@@ -65,22 +57,20 @@ public final class SeasonedFoodModels {
     }
 
     private static final class SeasonedModel extends BakedModelWrapper<IBakedModel> {
-        private final IBakedModel badgeModel;
-        private final ItemStack badge;
-        SeasonedModel(IBakedModel original, IBakedModel badgeModel, ItemStack badge) {
-            super(original); this.badgeModel = badgeModel; this.badge = badge;
-        }
+        private final List<ItemStack> badges;
+        SeasonedModel(IBakedModel original, List<ItemStack> badges) { super(original); this.badges = badges; }
         @Override public Pair<? extends IBakedModel, Matrix4f> handlePerspective(ItemCameraTransforms.TransformType type) {
             Pair<? extends IBakedModel, Matrix4f> food = originalModel.handlePerspective(type);
             if (type != ItemCameraTransforms.TransformType.GUI || food.getLeft().isBuiltInRenderer()) return food;
-            Pair<? extends IBakedModel, Matrix4f> icon = badgeModel.handlePerspective(type);
-            List<Object> key = Arrays.asList(food.getLeft(), food.getRight(), icon.getLeft(), icon.getRight(),
-                badge.getItem(), badge.getMetadata(), badge.getTagCompound());
-            IBakedModel cached = GUI_MODELS.getIfPresent(key);
-            if (cached == null) {
-                cached = compose(food, icon, badge);
-                GUI_MODELS.put(key, cached);
+            List<Pair<? extends IBakedModel, Matrix4f>> icons = new ArrayList<>();
+            List<Object> key = new ArrayList<>(Arrays.asList(food.getLeft(), food.getRight()));
+            for (ItemStack badge : badges) {
+                IBakedModel model = Minecraft.getMinecraft().getRenderItem().getItemModelWithOverrides(badge, null, null);
+                Pair<? extends IBakedModel, Matrix4f> icon = model.handlePerspective(type); icons.add(icon);
+                key.addAll(Arrays.asList(icon.getLeft(), icon.getRight(), badge.getItem(), badge.getMetadata(), badge.getTagCompound()));
             }
+            IBakedModel cached = GUI_MODELS.getIfPresent(key);
+            if (cached == null) { cached = compose(food, icons, badges); GUI_MODELS.put(key, cached); }
             return Pair.of(cached, null);
         }
     }
@@ -92,15 +82,19 @@ public final class SeasonedFoodModels {
     }
 
     private static IBakedModel compose(Pair<? extends IBakedModel, Matrix4f> food,
-                                       Pair<? extends IBakedModel, Matrix4f> icon, ItemStack badge) {
+                                       List<Pair<? extends IBakedModel, Matrix4f>> icons, List<ItemStack> badges) {
         List<BakedQuad> result = new ArrayList<>();
         float[] front = { .5f };
         for (BakedQuad quad : quads(food.getLeft())) result.add(transform(quad, food.getRight(), false, -1, front));
-        float[] depth = { front[0] + .02f };
-        for (BakedQuad quad : quads(icon.getLeft())) {
-            int color = quad.hasTintIndex() ? Minecraft.getMinecraft().getItemColors().colorMultiplier(badge, quad.getTintIndex()) : 0xFFFFFF;
-            result.add(transform(quad, icon.getRight(), true, color, depth));
+        float[] depth = { front[0] + .002f };
+        for (int i = 0; i < icons.size(); i++) {
+            Pair<? extends IBakedModel, Matrix4f> icon = icons.get(i); ItemStack badge = badges.get(i);
+            for (BakedQuad quad : quads(icon.getLeft())) {
+                int color = quad.hasTintIndex() ? Minecraft.getMinecraft().getItemColors().colorMultiplier(badge, quad.getTintIndex()) : 0xFFFFFF;
+                result.add(transform(quad, icon.getRight(), true, color, depth, Math.min(i,1) * .5F, i == 2 ? .5F : 0));
+            }
         }
+
         List<BakedQuad> immutable = Collections.unmodifiableList(result);
         return new BakedModelWrapper<IBakedModel>(food.getLeft()) {
             @Override public List<BakedQuad> getQuads(IBlockState state, EnumFacing side, long rand) {
@@ -110,6 +104,12 @@ public final class SeasonedFoodModels {
     }
 
     static BakedQuad transform(BakedQuad quad, Matrix4f camera, boolean badge, int color, float[] depth) {
+        return transform(quad, camera, badge, color, depth, 0);
+    }
+    static BakedQuad transform(BakedQuad quad, Matrix4f camera, boolean badge, int color, float[] depth, float badgeX) {
+        return transform(quad,camera,badge,color,depth,badgeX,0);
+    }
+    static BakedQuad transform(BakedQuad quad, Matrix4f camera, boolean badge, int color, float[] depth, float badgeX, float badgeY) {
         UnpackedBakedQuad.Builder builder = new UnpackedBakedQuad.Builder(DefaultVertexFormats.ITEM);
         quad.pipe(new VertexTransformer(builder) {
             @Override public void setQuadTint(int tint) { super.setQuadTint(badge ? -1 : tint); }
@@ -120,8 +120,8 @@ public final class SeasonedFoodModels {
                     case POSITION:
                         Vector4f position = new Vector4f(values[0] - .5f, values[1] - .5f, values[2] - .5f, 1);
                         if (camera != null) camera.transform(position);
-                        values[0] = badge ? .25f + position.x * .5f : position.x + .5f;
-                        values[1] = badge ? .25f + position.y * .5f : position.y + .5f;
+                        values[0] = badge ? badgeX + .25f + position.x * .5f : position.x + .5f;
+                        values[1] = badge ? badgeY + .25f + position.y * .5f : position.y + .5f;
                         values[2] = badge ? depth[0] + position.z * .01f : position.z + .5f;
                         if (!badge) depth[0] = Math.max(depth[0], values[2]);
                         break;

@@ -16,10 +16,13 @@ public final class SpiceConfig {
     public static final Map<SpiceKind, Double> multipliers = new LinkedHashMap<>();
     public static final Map<SpiceKind, Integer> durations = new LinkedHashMap<>();
     public static int mixedCount = 2, duration = 2400, hamExtension = 2400, hamDuration = 1800, riceHunger = 7;
+    public static int mixedIngredients = 3, maxSeasonings = 1, maxAccompaniments = 2;
+    public static boolean allowSeasoningWithAccompaniments = false;
     public static int fruitMinimumDuration = 1800;
     public static String mixedCatalystItem = "minecraft:nether_star";
     public static int mixedCatalystMetadata = 0;
     public static boolean consumeMixedCatalyst = false;
+    public static double accompanimentMultiplier = 1.2;
     public static double doubleDuration = 1.5, tripleDuration = 2, mixedMultiplier = 1.2,
         miningPerLevel = .2, attackSpeedPerLevel = .07, healingPerLevel = .1,
         reductionBase = .1, reductionPerLevel = .05, riceSaturation = 7,
@@ -31,6 +34,14 @@ public final class SpiceConfig {
     public static void load(File directory) {
         config = new Configuration(new File(directory, "solwarly-spices.cfg")); config.load();
         mixedCount = integer("mix", "output", 2, 1, 64, "每次合成混合调味粉的产量。\nMixed spice output per craft.");
+        mixedIngredients = integer("mix", "inputCount", 3, 1, 8,
+            "混合调味料所需的单粉数量，另需一个配置的额外物品。\nNumber of single powders required for a blend, plus one configured catalyst.");
+        maxSeasonings = integer("seasoning", "maxApplications", 1, 1, Integer.MAX_VALUE,
+            "每份食物累计使用调味粉的次数上限；一份单粉或混合粉均算一次，可重复同种。\nMaximum powder applications per food; a single powder or a blend each counts once, including repeats.");
+        maxAccompaniments = integer("accompaniments", "maxApplications", 2, 1, Integer.MAX_VALUE,
+            "每份食物使用佐料的次数上限，独立于调味粉；仅前两份显示佐料角标。\nMaximum accompaniment servings per food, separate from powders; only the first two have badges.");
+        allowSeasoningWithAccompaniments = config.getBoolean("allowWithAccompaniments", "seasoning", false,
+            "是否允许同一食物同时具有佐料和调味粉，开启后可同时加入或先后追加。\nAllow accompaniments and powders on the same food, together or added sequentially.");
         mixedCatalystItem = config.getString("catalystItem", "mix", "minecraft:nether_star",
             "混合调味粉所需的额外物品注册名，每次需要一个，默认下界之星；无效物品会禁用混合配方，不能使用调味粉本身。\nRegistry ID of the extra item required for mixing, one per craft; defaults to a Nether Star. Invalid items disable mixing; spice powder itself is not supported.").trim();
         mixedCatalystMetadata = integer("mix", "catalystMetadata", 0, 0, 32766,
@@ -40,6 +51,8 @@ public final class SpiceConfig {
         doubleDuration = number("mix", "doubleDuration", 1.5, 0, 100, "同种两份不增强等级的效果时长倍率。\nDuration multiplier for two copies of a non-scaling effect.");
         tripleDuration = number("mix", "tripleDuration", 2, 0, 100, "同种三份不增强等级的效果时长倍率。\nDuration multiplier for three copies of a non-scaling effect.");
         mixedMultiplier = number("mix", "diversityMultiplier", 1.2, 0, 100, "混合粉整体多样性倍率，不累乘成分。\nOverall mixed spice diversity multiplier; components do not multiply it.");
+        accompanimentMultiplier = number("accompaniments", "diversityMultiplier", 1.2, 0, 100,
+            "两份及以上佐料整体多样性倍率，不按份数累乘。\nOverall diversity multiplier for two or more accompaniments; it does not multiply per serving.");
         duration = integer("effects", "durationTicks", 2400, 1, 72000, "普通调味效果持续游戏刻数，20刻为一秒。\nRegular effect duration in ticks; 20 ticks equal one second.");
         fruitMinimumDuration = integer("effects", "fruitMinimumDurationTicks", 1800, 0, 72000,
             "果香粉单份效果最低持续刻数，默认1800刻为90秒；更长的果酱效果保留，之后再应用混合时长倍率。\nMinimum single-copy fruit spice effect duration in ticks; 1800 ticks equal 90 seconds. Longer jam effects are preserved, then mixed duration multipliers apply.");
@@ -96,7 +109,7 @@ public final class SpiceConfig {
     public static NBTTagCompound snapshot() {
         NBTTagCompound tag = new NBTTagCompound();
         for (SpiceKind kind : SpiceKind.values()) { tag.setDouble(kind.id(), multipliers.get(kind)); tag.setInteger(kind.id() + "Color", colors.get(kind)); }
-        tag.setDouble("mixed", mixedMultiplier); tag.setInteger("mixedCount", mixedCount);
+        tag.setDouble("accompaniments", accompanimentMultiplier); tag.setDouble("mixed", mixedMultiplier); tag.setInteger("mixedCount", mixedCount);
         tag.setString("mixedCatalystItem", mixedCatalystItem);
         tag.setInteger("mixedCatalystMetadata", mixedCatalystMetadata);
         tag.setBoolean("consumeMixedCatalyst", consumeMixedCatalyst);
@@ -108,10 +121,17 @@ public final class SpiceConfig {
         tag.setDouble("doubleDuration", doubleDuration); tag.setDouble("tripleDuration", tripleDuration);
         tag.setDouble("sharingPerCopy", sharingPerCopy); tag.setDouble("sharingRadius", sharingRadius);
         tag.setDouble("appetiteBase", appetiteBase); tag.setDouble("appetitePerLevel", appetitePerLevel);
+        tag.setInteger("mixedIngredients", mixedIngredients); tag.setInteger("maxSeasonings", maxSeasonings); tag.setInteger("maxAccompaniments", maxAccompaniments);
+        tag.setBoolean("allowSeasoningWithAccompaniments", allowSeasoningWithAccompaniments);
         return tag;
     }
     public static void readSnapshot(NBTTagCompound tag) {
+        mixedIngredients = tag.hasKey("mixedIngredients") ? Math.max(1, Math.min(8, tag.getInteger("mixedIngredients"))) : 3;
+        maxSeasonings = tag.hasKey("maxSeasonings") ? Math.max(1, tag.getInteger("maxSeasonings")) : 1;
+        maxAccompaniments = tag.hasKey("maxAccompaniments") ? Math.max(1, tag.getInteger("maxAccompaniments")) : 2;
+        allowSeasoningWithAccompaniments = tag.getBoolean("allowSeasoningWithAccompaniments");
         for (SpiceKind kind : SpiceKind.values()) { multipliers.put(kind, tag.getDouble(kind.id())); colors.put(kind, tag.getInteger(kind.id() + "Color")); }
+        if (tag.hasKey("accompaniments")) accompanimentMultiplier = tag.getDouble("accompaniments");
         mixedMultiplier = tag.getDouble("mixed"); mixedCount = tag.getInteger("mixedCount");
         if (tag.hasKey("mixedCatalystItem")) {
             mixedCatalystItem = tag.getString("mixedCatalystItem");
@@ -129,7 +149,7 @@ public final class SpiceConfig {
         }
         if (tag.hasKey("fruitMinimumDuration")) fruitMinimumDuration = tag.getInteger("fruitMinimumDuration");
         // Compare received settings, not shared static fields already changed by an integrated-server reload.
-        String mixingSnapshot = mixedCatalystItem + "@" + mixedCatalystMetadata + ":" + consumeMixedCatalyst + ":" + mixedCount;
+        String mixingSnapshot = mixedCatalystItem + "@" + mixedCatalystMetadata + ":" + consumeMixedCatalyst + ":" + mixedCount + ":" + mixedIngredients;
         if (!lastMixingSnapshot.equals(mixingSnapshot)) {
             lastMixingSnapshot = mixingSnapshot;
             net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new MixingRecipeChanged());

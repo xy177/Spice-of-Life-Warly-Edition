@@ -188,3 +188,13 @@ solwarly.command.mode_set=Changed %s's food diversity mode to %s
 solwarly.command.mode.true=Warly Mode
 solwarly.command.mode.false=Default Mode
 solwarly.command.mode.default=Follow Configuration
+
+item.solwarly.spice.creative.name=Creative Mode Seasoning
+solwarly.book.grinder=Spice Grinding Mill
+solwarly.book.grinder.1=Right-click to insert whole recipe batches. Empty-hand right-click retrieves both inputs. Each batch takes 3 seconds.
+solwarly.book.grinder.2=Top and sides insert or retrieve ingredients; the bottom extracts products. Complete two-input recipes take priority over single-input recipes.
+solwarly.book.grinder.3=An ingredient shared by single- and two-input recipes starts the animation, waits 5 seconds, then processes alone. Continuous batches skip the wait. Redstone forces single input while unbound.
+solwarly.book.grinder.4=Sneak-right-click with a single powder to bind its recipes, or with an empty hand to unbind. Binding overrides redstone and waiting. A rotating preview shows products and ingredients.
+solwarly.book.grinder.5=Expelled items go into a configured bottom hopper or pipe first; leftovers drop. Foods accept up to two accompaniments. Powders cannot combine with accompaniments.
+
+solwarly.spice.accompaniment=Use as an accompaniment by crafting with food

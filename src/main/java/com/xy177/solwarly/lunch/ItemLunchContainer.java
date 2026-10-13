@@ -88,8 +88,8 @@ public final class ItemLunchContainer extends Item {
             int state = appetite.state(id);
             double interest = client ? state > 0 ? DietRuntime.clientCravingMultiplier
                 : state < 0 ? DietRuntime.clientBoringMultiplier : DietRuntime.clientNormalMultiplier : appetite.multiplier(id);
-            return diet.diversityAfter(id, flavor.id, base * interest * flavor.diversityMultiplier
-                * DietRuntime.warlyMultiplier(player, food), count, extra, scale);
+            return diet.diversityAfter(id, flavor.id, DietRuntime.contribution(player, food, base * interest * flavor.diversityMultiplier
+                * DietRuntime.warlyMultiplier(player, food)), count, extra, scale);
         });
     }
 

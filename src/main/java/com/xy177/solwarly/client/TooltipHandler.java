@@ -49,7 +49,7 @@ public final class TooltipHandler {
         if (base != null) {
             double interest = state > 0 ? DietRuntime.clientCravingMultiplier : state < 0 ? DietRuntime.clientBoringMultiplier : DietRuntime.clientNormalMultiplier;
             event.getToolTip().add(TextFormatting.BLUE + I18n.format("solwarly.tooltip.contribution",
-                DisplayNumbers.format(base * interest * flavor.diversityMultiplier * DietRuntime.warlyMultiplier(player, food))));
+                DisplayNumbers.format(DietRuntime.contribution(player, food, base * interest * flavor.diversityMultiplier * DietRuntime.warlyMultiplier(player, food)))));
         }
     }
     private TooltipHandler() {}

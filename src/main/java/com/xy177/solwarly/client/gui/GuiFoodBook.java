@@ -98,6 +98,7 @@ public final class GuiFoodBook extends GuiScreen {
 		addDailyFoods("solwarly.book.boring", DietRuntime.clientAppetite.boringFoods());
 		
 		pages.add(new ConfigInfoPage(foodData, background.frame));
+        pages.addAll(GrinderGuidePage.pages(background.frame));
 		
 		int first = pages.size();
         addPages("eaten_foods", foodData.eatenFoods);

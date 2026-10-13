@@ -1,0 +1,68 @@
+{
+  "_instructions": {
+    "zh_cn": [
+      "以 _ 开头的文件仅为示例，不加载。复制成其他名称、设置 enabled 为 true，重启后生效。",
+      "每个文件定义一种佐料。id 必须唯一且保持稳定；绑定已有 material 物品，不注册新物品，也不进入研磨或混合粉配方。",
+      "material 每份固定消耗1个，count 省略或设为1；支持 item、metadata、nbt；未写 nbt 仅匹配不带额外数据的物品。metadata 在1.12为子类型，在高版本为耐久值。",
+      "1.21支持 components 对象指定数据组件（例如 minecraft:potion_contents）；nbt 仅指定 minecraft:custom_data。1.12和1.20用 nbt 指定物品NBT。匹配物品数据时必须完全相同，数量不参与匹配。",
+      "hunger 为每份附加饥饿点数，2点为1格；saturation 为每份附加的实际饱和度数值，不是饱和度倍率。均必须非负，不自动读取佐料自身营养。",
+      "effects 是每份药水效果列表，potion 为注册名、level 从1开始、duration_seconds 用秒；无效果填 []。不继承佐料自身效果，不用粉末的1/2/3分档格式。",
+      "最多两份佐料，同种可重复，也可先后添加；营养相加，同一种药水时长相加且等级取较高。不能和粉末混用，已调味物品不能作佐料；原佐料食物直接食用仍保持原本效果。",
+      "多个佐料食物互相佐时，工作台最左上有物品格为目标。普通食物可在任意位置，盛宴仍须先分食。",
+      "return 省略时按原物品容器规则返还；null 不返还；物品对象可用 item、count、metadata、nbt（1.21可用 components）指定返还物。仅消耗的佐料返容器，目标料理不返。",
+      "translations 可按各语言填写 name、prefix、suffix、tooltip，tooltip 用 \\n 换行，省略则自动列出名称和药水效果。前后缀与食物名自动留空格。缺失语言回退 en_us，再回退其他语言。",
+      "color 为 #RRGGBB，控制提示颜色；角标使用绑定物品原图标。diversity_multiplier 默认1.2用于单份；两份整体沿用 solwarly-spices.cfg 中 accompaniments.diversityMultiplier。",
+      "重复ID、材料与内置/其他自定义佐料冲突、物品或药水缺失、格式错误时跳过该文件并记日志，其他文件照常加载。",
+      "自定义佐料加入食物书口味及其双份组合、创造模式调味料的全部效果；服务端同步定义给客户端，客户端不需要复制文件。",
+      "每份食物佐料次数由 accompaniments.maxApplications 控制，默认2；两份以上仍累加营养和时长，仅前两份显示角标。seasoning.allowWithAccompaniments 默认false，开启后可与粉末共存。",
+      "实际药水等级最高128，时长最多2147483647刻；佐料次数与完整数量仍保留。"
+    ],
+    "en_us": [
+      "Files starting with _ are examples only. Copy to another filename, set enabled to true, and restart.",
+      "Each file defines one accompaniment with a unique stable ID, using an existing material item. No new item, grinding recipe or powder blend is registered.",
+      "Each serving consumes exactly one material; omit count or use 1. Supports item, metadata and nbt. Omitted nbt matches only stacks without extra data. metadata is a subtype in 1.12 and damage in newer versions.",
+      "1.21 supports a components object (for example minecraft:potion_contents); nbt specifies minecraft:custom_data only. 1.12 and 1.20 use nbt for item tags. Item data must match exactly; stack count is ignored.",
+      "hunger adds hunger points per serving (2 points = 1 icon). saturation adds actual saturation, not a multiplier. Both must be nonnegative; material nutrition is not inherited.",
+      "effects is a per-serving list: potion registry ID, level starting at 1, duration_seconds in seconds. [] means no effects. Material effects are not inherited. Do not use powder copy tiers 1/2/3 here.",
+      "Up to two servings, identical or different, together or sequentially. Nutrition adds; matching effect durations add and the higher level wins. Powders are mutually exclusive; seasoned items cannot be materials. Eating the material itself keeps its normal effects.",
+      "When edible accompaniment materials season each other, the top-left occupied crafting slot is the target. Ordinary food may be anywhere; feasts must be portioned first.",
+      "Omit return to use the native container rule; null disables returns. A stack object supports item, count, metadata, nbt (and components in 1.21). Only consumed accompaniments return containers, not the target.",
+      "translations supports name, prefix, suffix and optional multiline tooltip (\\n) per language. Missing tooltip uses the name and effects. Affix spacing is automatic. Language fallback: en_us, then another language.",
+      "color is #RRGGBB for tooltip text; badges use the native material icon. diversity_multiplier defaults to 1.2 for one serving; two use accompaniments.diversityMultiplier in solwarly-spices.cfg.",
+      "Duplicate IDs/material conflicts with built-in or other custom accompaniments, missing items/effects and invalid files are skipped with a log message; other files still load.",
+      "Accompaniments and all valid pairs are included in the food book and creative seasoning. The server syncs definitions; clients do not need the files.",
+      "accompaniments.maxApplications controls servings per food (default 2). Further servings still add nutrition and duration, but only the first two have badges. seasoning.allowWithAccompaniments defaults to false; enable it to combine accompaniments with powders.",
+      "Actual effects cap at level 128 and 2147483647 ticks; full serving counts remain saved."
+    ]
+  },
+  "enabled": false,
+  "id": "custom:carrot_side",
+  "material": {
+    "item": "minecraft:carrot"
+  },
+  "color": "#E58C35",
+  "diversity_multiplier": 1.2,
+  "hunger": 2,
+  "saturation": 1.2,
+  "translations": {
+    "zh_cn": {
+      "name": "胡萝卜佐料",
+      "prefix": "",
+      "suffix": "佐胡萝卜",
+      "tooltip": "搭配胡萝卜，为这一餐增添风味。"
+    },
+    "en_us": {
+      "name": "Carrot Accompaniment",
+      "prefix": "",
+      "suffix": "with Carrot",
+      "tooltip": "A carrot accompaniment for this meal."
+    }
+  },
+  "effects": [
+    {
+      "potion": "minecraft:night_vision",
+      "level": 1,
+      "duration_seconds": 30
+    }
+  ]
+}
