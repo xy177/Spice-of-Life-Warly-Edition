@@ -1,3 +1,5 @@
+// Adapted from Spice of Life: Carrot Edition; original contributors retain copyright.
+// Modified by xy177 on 2026-10-13; LGPL-2.1. See LICENSE.txt and THIRD_PARTY_NOTICES.md.
 plugins {
     id 'java-library'
     id 'net.minecraftforge.gradle' version '6.0.54'
@@ -53,7 +55,8 @@ tasks.named('processResources').configure {
     filesMatching('META-INF/mods.toml') { expand version: project.version }
 }
 tasks.named('jar').configure {
-    from 'LICENSE.txt'
+    from 'LICENSE.txt', 'THIRD_PARTY_NOTICES.md'
+    from('licenses') { into 'licenses' }
     manifest { attributes 'Implementation-Vendor': 'xy177', 'MixinConfigs': 'solwarly.mixins.json' }
     finalizedBy 'reobfJar'
 }
