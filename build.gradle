@@ -57,7 +57,8 @@ processResources {
 }
 
 jar {
-    from('LICENSE.txt')
+    from('LICENSE.txt', 'THIRD_PARTY_NOTICES.md')
+    from('licenses') { into 'licenses' }
     manifest {
         attributes 'Implementation-Title': 'Spice of Life Warly Edition',
                    'Implementation-Version': project.version,
@@ -66,5 +67,6 @@ jar {
 }
 
 sourceJar {
-    from 'LICENSE.txt'
+    from 'LICENSE.txt', 'THIRD_PARTY_NOTICES.md'
+    from('licenses') { into 'licenses' }
 }
