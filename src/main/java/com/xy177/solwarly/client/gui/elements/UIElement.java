@@ -1,40 +1,41 @@
-// Modified by xy177 on 2026-10-10 for Spice of Life Warly Edition; upstream LGPL 2.1.
 package com.xy177.solwarly.client.gui.elements;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.item.ItemStack;
-import net.minecraftforge.fml.client.config.GuiUtils;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
+import net.minecraft.world.item.ItemStack;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 
 import javax.annotation.Nullable;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.*;
 import java.util.stream.Stream;
 
 import static java.util.Collections.singletonList;
 
-@SideOnly(Side.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public abstract class UIElement {
-	public static void render(UIElement element, int mouseX, int mouseY) {
-		render(singletonList(element), mouseX, mouseY);
+	public static void render(GuiGraphics graphics, UIElement element, int mouseX, int mouseY) {
+		render(graphics, singletonList(element), mouseX, mouseY);
 	}
 	
-	public static void render(List<UIElement> elements, int mouseX, int mouseY) {
-		elements.forEach(UIElement::render);
+	public static void render(GuiGraphics graphics, List<UIElement> elements, int mouseX, int mouseY) {
+		elements.forEach(element -> element.render(graphics));
 		
 		elements.stream()
 			.flatMap(UIElement::getRecursiveChildren)
 			.filter(element -> element.hasTooltip() && element.frame.contains(mouseX, mouseY))
 			.reduce((one, two) -> two) // last element was rendered last and is thus visually on top
-			.ifPresent(element -> element.renderTooltip(mouseX, mouseY));
+			.ifPresent(element -> element.renderTooltip(graphics, mouseX, mouseY));
 	}
 	
-	protected static final Minecraft mc = Minecraft.getMinecraft();
-	protected static final FontRenderer fontRenderer = mc.fontRenderer;
+	protected static final Minecraft mc = Minecraft.getInstance();
+	protected static final Font font = mc.font;
 	
 	public Rectangle frame;
 	@Nullable
@@ -48,8 +49,8 @@ public abstract class UIElement {
 	/**
 	 Renders the element to the screen. Note that no transforms have been applied, so you should take your position into account!
 	 */
-	protected void render() {
-		children.forEach(UIElement::render);
+	protected void render(GuiGraphics graphics) {
+		children.forEach(child -> child.render(graphics));
 	}
 	
 	private Stream<UIElement> getRecursiveChildren() {
@@ -60,7 +61,7 @@ public abstract class UIElement {
 	}
 	
 	/**
-	 @return whether or not the element has a tooltip. This is used to determine which of multiple overlapping tooltips to render.
+	 @return whether the element has a tooltip. This is used to determine which of multiple overlapping tooltips to render.
 	 */
 	protected boolean hasTooltip() {
 		return tooltip != null;
@@ -68,20 +69,26 @@ public abstract class UIElement {
 	
 	/**
 	 Renders the tooltip at the given position.
+	 
 	 @param mouseX the mouse's x position
 	 @param mouseY the mouse's y position
 	 */
-	protected void renderTooltip(int mouseX, int mouseY) {
+	protected void renderTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
 		if (tooltip == null) return;
-		ScaledResolution resolution = new ScaledResolution(mc);
-		GuiUtils.drawHoveringText(
-			ItemStack.EMPTY,
-			Arrays.asList(tooltip.split("\n")),
-			mouseX, mouseY,
-			resolution.getScaledWidth(), resolution.getScaledHeight(),
-			-1,
-			fontRenderer
-		);
+		
+		renderTooltip(graphics, ItemStack.EMPTY, java.util.Arrays.stream(tooltip.split("\n")).map(Component::literal).toList(), mouseX, mouseY);
+	}
+	
+	/**
+	 Renders a tooltip at the given position.
+	 
+	 @param itemStack an item stack (possibly empty/none) that is the subject of the tooltip
+	 @param tooltip the tooltip contents
+	 @param mouseX the mouse's x position
+	 @param mouseY the mouse's y position
+	 */
+	protected final void renderTooltip(GuiGraphics graphics, ItemStack itemStack, List<? extends FormattedText> tooltip, int mouseX, int mouseY) {
+		graphics.renderComponentTooltip(font, tooltip, mouseX, mouseY, itemStack);
 	}
 	
 	/** calculates and sets the frame to the smallest rectangle enclosing all children's frames */

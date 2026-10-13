@@ -1,52 +1,40 @@
-// Modified by xy177 on 2026-10-10 for Spice of Life Warly Edition; upstream LGPL 2.1.
 package com.xy177.solwarly.client.gui.elements;
 
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.client.config.GuiUtils;
+import net.minecraft.client.gui.GuiGraphics;
 
 import java.awt.*;
 
 public class UIImage extends UIElement {
-	public Image image;
+	public ImageData data;
 	public float alpha = 1;
 	
-	public UIImage(Image image) {
-		this(new Rectangle(image.partOfTexture.getSize()), image);
+	public UIImage(ImageData data) {
+		this(new Rectangle(data.visualWidth, data.visualHeight), data);
 	}
 	
-	public UIImage(Rectangle frame, Image image) {
+	public UIImage(Rectangle frame, ImageData data) {
 		super(frame);
 		
-		this.image = image;
+		this.data = data;
 	}
 	
 	@Override
-	protected void render() {
-		super.render();
+	protected void render(GuiGraphics graphics) {
+		super.render(graphics);
 		
-		int imageWidth = image.partOfTexture.width;
-		int imageHeight = image.partOfTexture.height;
+		int imageWidth = data.partOfTexture.width;
+		int imageHeight = data.partOfTexture.height;
 		
-		GlStateManager.enableBlend();
-		GlStateManager.color(1, 1, 1, alpha);
-		mc.getTextureManager().bindTexture(image.textureLocation);
-		GuiUtils.drawTexturedModalRect(
+		graphics.setColor(1,1,1,alpha);
+        graphics.blit(
+			data.textureLocation,
 			frame.x + (int) Math.floor((frame.width - imageWidth) / 2d),
 			frame.y + (int) Math.floor((frame.height - imageHeight) / 2d),
-			image.partOfTexture.x, image.partOfTexture.y,
-			image.partOfTexture.width, image.partOfTexture.height,
-			0
+			0,
+			data.partOfTexture.x, data.partOfTexture.y,
+			data.partOfTexture.width, data.partOfTexture.height,
+			256, 256
 		);
-	}
-	
-	public static class Image {
-		public final ResourceLocation textureLocation;
-		public final Rectangle partOfTexture;
-		
-		public Image(ResourceLocation textureLocation, Rectangle partOfTexture) {
-			this.textureLocation = textureLocation;
-			this.partOfTexture = partOfTexture;
-		}
+        graphics.setColor(1,1,1,1);
 	}
 }

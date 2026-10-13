@@ -1,56 +1,49 @@
 package com.xy177.solwarly.spice;
 
 import com.xy177.solwarly.SOLWarly;
-import net.minecraft.item.Item;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvent;
-import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.CreativeModeTabs;
+import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.registries.DeferredRegister;
 
-@Mod.EventBusSubscriber(modid = SOLWarly.MOD_ID)
+@EventBusSubscriber(modid=SOLWarly.MOD_ID,bus=EventBusSubscriber.Bus.MOD)
 public final class SpiceRegistry {
-    public static final ItemSpice spice = new ItemSpice();
-    public static final PotionSpice sweet = new PotionSpice(SpiceKind.SUGAR, "sweet");
-    public static final PotionSpice tasty = new PotionSpice(SpiceKind.SALT, "tasty");
-    public static final PotionSpice aromatic = new PotionSpice(SpiceKind.ONION, "aromatic");
-    public static final PotionSpice hot = new PotionSpice(SpiceKind.SPICY, "hot");
-    public static final PotionSpice appetizing = new PotionSpice(SpiceKind.PICKLE, "appetizing");
-    public static final SoundEvent grinderWorking = sound("spice_grinder_working");
-    public static final SoundEvent grinderComplete = sound("spice_grinder_complete");
-    static { spice.setRegistryName(SOLWarly.MOD_ID, "spice"); spice.setTranslationKey(SOLWarly.MOD_ID + ".spice"); }
-
-    private static SoundEvent sound(String name) {
-        ResourceLocation id = new ResourceLocation(SOLWarly.MOD_ID, name);
-        return new SoundEvent(id).setRegistryName(id);
+    private static final DeferredRegister<Item> ITEMS=DeferredRegister.create(net.minecraft.core.registries.Registries.ITEM,SOLWarly.MOD_ID);
+    private static final DeferredRegister<MobEffect> EFFECTS=DeferredRegister.create(net.minecraft.core.registries.Registries.MOB_EFFECT,SOLWarly.MOD_ID);
+    private static final DeferredRegister<SoundEvent> SOUNDS=DeferredRegister.create(net.minecraft.core.registries.Registries.SOUND_EVENT,SOLWarly.MOD_ID);
+    private static final DeferredRegister<net.minecraft.world.level.block.Block> BLOCKS=DeferredRegister.create(net.minecraft.core.registries.Registries.BLOCK,SOLWarly.MOD_ID);
+    private static final DeferredRegister<net.minecraft.world.level.block.entity.BlockEntityType<?>> ENTITIES=DeferredRegister.create(net.minecraft.core.registries.Registries.BLOCK_ENTITY_TYPE,SOLWarly.MOD_ID);
+    private static final DeferredRegister<net.minecraft.world.item.crafting.RecipeSerializer<?>> RECIPES=DeferredRegister.create(net.minecraft.core.registries.Registries.RECIPE_SERIALIZER,SOLWarly.MOD_ID);
+    public static final java.util.function.Supplier<net.minecraft.world.item.crafting.SimpleCraftingRecipeSerializer<SeasonFoodRecipe>> SEASON=RECIPES.register("season_food",()->new net.minecraft.world.item.crafting.SimpleCraftingRecipeSerializer<>(SeasonFoodRecipe::new));
+    public static final java.util.function.Supplier<net.minecraft.world.item.crafting.SimpleCraftingRecipeSerializer<MixedSpiceRecipe>> MIXED=RECIPES.register("mixed_spice",()->new net.minecraft.world.item.crafting.SimpleCraftingRecipeSerializer<>(MixedSpiceRecipe::new));
+    public static final java.util.function.Supplier<com.xy177.solwarly.block.BlockSpiceGrinder> GRINDER=BLOCKS.register("spice_grinder",com.xy177.solwarly.block.BlockSpiceGrinder::new);
+    public static final java.util.function.Supplier<net.minecraft.world.level.block.entity.BlockEntityType<TileEntitySpiceGrinder>> GRINDER_ENTITY=ENTITIES.register("spice_grinder",()->net.minecraft.world.level.block.entity.BlockEntityType.Builder.of(TileEntitySpiceGrinder::new,GRINDER.get()).build(null));
+    public static ItemSpice spice;
+    public static PotionSpice sweet,tasty,aromatic,hot,appetizing;
+    public static final SoundEvent grinderWorking=SoundEvent.createVariableRangeEvent(net.minecraft.resources.ResourceLocation.parse("solwarly:spice_grinder_working")),
+        grinderComplete=SoundEvent.createVariableRangeEvent(net.minecraft.resources.ResourceLocation.parse("solwarly:spice_grinder_complete"));
+    static {
+        ITEMS.register("spice",()->spice=new ItemSpice());
+        ITEMS.register("spice_grinder",()->new net.minecraft.world.item.BlockItem(GRINDER.get(),new Item.Properties()));
+        EFFECTS.register("sweet",()->sweet=new PotionSpice(SpiceKind.SUGAR));EFFECTS.register("tasty",()->tasty=new PotionSpice(SpiceKind.SALT));EFFECTS.register("aromatic",()->aromatic=new PotionSpice(SpiceKind.ONION));
+        EFFECTS.register("hot",()->hot=new PotionSpice(SpiceKind.SPICY));EFFECTS.register("appetizing",()->appetizing=new PotionSpice(SpiceKind.PICKLE));
+        SOUNDS.register("spice_grinder_working",()->grinderWorking);SOUNDS.register("spice_grinder_complete",()->grinderComplete);
     }
-
-    @SubscribeEvent public static void register(RegistryEvent.Register<Item> event) {
-        event.getRegistry().register(spice);
-        event.getRegistry().register(new net.minecraft.item.ItemBlock(com.xy177.solwarly.block.BlockSpiceGrinder.INSTANCE)
-            .setRegistryName(SOLWarly.MOD_ID, "spice_grinder"));
+    public static void setUp(IEventBus bus) { SpiceKindIngredient.register(bus); BLOCKS.register(bus);ITEMS.register(bus);ENTITIES.register(bus);EFFECTS.register(bus);SOUNDS.register(bus);RECIPES.register(bus); }
+    @SubscribeEvent public static void creative(BuildCreativeModeTabContentsEvent event) {
+        if(event.getTabKey()==CreativeModeTabs.FUNCTIONAL_BLOCKS)event.accept(GRINDER.get());
+        if(event.getTabKey()==CreativeModeTabs.FOOD_AND_DRINKS)for(SpiceKind kind:SpiceKind.all())
+            if(!kind.nativeMaterial()&&kind.available())event.accept(Seasoning.powder(java.util.List.of(kind),1));
     }
-    @SubscribeEvent public static void preInit(SOLWarly.PreInitializationEvent event) {
-        net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntitySpiceGrinder.class,
-            new net.minecraft.util.ResourceLocation(SOLWarly.MOD_ID, "spice_grinder"));
+    @SubscribeEvent public static void capabilities(net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK,GRINDER_ENTITY.get(),TileEntitySpiceGrinder::handler);
     }
     private SpiceRegistry() {}
-    @SubscribeEvent public static void potions(RegistryEvent.Register<net.minecraft.potion.Potion> event) {
-        event.getRegistry().registerAll(sweet, tasty, aromatic, hot, appetizing);
-    }
-    @SubscribeEvent public static void sounds(RegistryEvent.Register<SoundEvent> event) {
-        event.getRegistry().register(grinderWorking);
-        event.getRegistry().register(grinderComplete);
-    }
-    @SubscribeEvent public static void recipes(RegistryEvent.Register<net.minecraft.item.crafting.IRecipe> event) {
-        event.getRegistry().register(new SeasonFoodRecipe().setRegistryName(SOLWarly.MOD_ID, "season_food"));
-        event.getRegistry().register(new MixedSpiceRecipe().setRegistryName(SOLWarly.MOD_ID, "mixed_spice"));
-    }
-    @SubscribeEvent public static void postInit(SOLWarly.PostInitializationEvent event) {
-        SeasoningPotions.loadFruits();
-        BuiltinSpiceRecipes.reload();
-        CustomSpices.load(com.xy177.solwarly.diet.DietConfig.directory);
-        com.xy177.solwarly.api.FlavorAPI.register(new net.minecraft.util.ResourceLocation("solwarly:seasoning"), Seasoning::flavor);
-        com.xy177.solwarly.api.FlavorAPI.registerVariants(new net.minecraft.util.ResourceLocation("solwarly:seasoning"), Seasoning::variants);
-    }
 }

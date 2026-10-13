@@ -1,19 +1,21 @@
 package com.xy177.solwarly.diet;
 
 import net.minecraft.nbt.*;
-import net.minecraft.world.storage.WorldSavedData;
+import net.minecraft.world.level.saveddata.SavedData;
 import java.util.*;
 
-public final class AppetiteData extends WorldSavedData {
+public final class AppetiteData extends SavedData {
+    @Override public CompoundTag save(CompoundTag tag,net.minecraft.core.HolderLookup.Provider provider) { return save(tag); }
+
     public long lastDay = Long.MIN_VALUE;
     private boolean syncPending;
     public int retainedCount = 20;
     private final Deque<String> recent = new ArrayDeque<>();
     public final Set<String> craved = new LinkedHashSet<>(), boring = new LinkedHashSet<>();
     private final Set<String> fixedCraved = new LinkedHashSet<>(), fixedBoring = new LinkedHashSet<>();
-    public AppetiteData() { super("solwarly_appetite"); }
-    public AppetiteData(String name) { super(name); }
-    public void eat(String food) { recent.addLast(food); trim(); markDirty(); }
+    public AppetiteData() {  }
+    public AppetiteData(String name) {  }
+    public void eat(String food) { recent.addLast(food); trim(); setDirty(); }
     private void trim() { while (recent.size() > retainedCount) recent.removeFirst(); }
     public int recentSize() { return recent.size(); }
     public int state(String food) {
@@ -35,12 +37,12 @@ public final class AppetiteData extends WorldSavedData {
             fixedCraved.clear(); fixedCraved.addAll(nextCraved); fixedBoring.clear(); fixedBoring.addAll(nextBoring);
             craved.removeAll(fixedCraved); craved.removeAll(fixedBoring);
             boring.removeAll(fixedCraved); boring.removeAll(fixedBoring);
-            syncPending = true; markDirty();
+            syncPending = true; setDirty();
         }
         if (day < lastDay) {
             // Rebase after /time set without redrawing today's interests.
             lastDay = day;
-            markDirty();
+            setDirty();
             return false;
         }
         if (day == lastDay) return false;
@@ -63,7 +65,7 @@ public final class AppetiteData extends WorldSavedData {
         for (int i = 0; i < cravings; i++) craved.add(draw(available, frequencies, true, frequencyWeight, random));
         for (int i = 0; i < dislikes; i++) boring.add(draw(available, frequencies, false, frequencyWeight, random));
         syncPending = true;
-        markDirty(); return true;
+        setDirty(); return true;
     }
     public boolean consumePendingSync() {
         boolean pending = syncPending;
@@ -85,25 +87,25 @@ public final class AppetiteData extends WorldSavedData {
         double weight = 1 + count * frequencyWeight;
         return craving ? 1 / weight : weight;
     }
-    @Override public void readFromNBT(NBTTagCompound tag) {
+    public void readFromNBT(CompoundTag tag) {
         syncPending = false;
-        lastDay = tag.hasKey("day") ? tag.getLong("day") : Long.MIN_VALUE;
-        retainedCount = Math.max(2, tag.getInteger("retainedCount"));
+        lastDay = tag.contains("day") ? tag.getLong("day") : Long.MIN_VALUE;
+        retainedCount = Math.max(2, tag.getInt("retainedCount"));
         recent.clear(); craved.clear(); boring.clear();
         recent.addAll(strings(tag, "recent")); craved.addAll(strings(tag, "craved")); boring.addAll(strings(tag, "boring")); trim();
         fixedCraved.clear(); fixedCraved.addAll(strings(tag, "fixedCraved"));
         fixedBoring.clear(); fixedBoring.addAll(strings(tag, "fixedBoring")); fixedCraved.removeAll(fixedBoring);
     }
-    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
-        tag.setLong("day", lastDay); tag.setInteger("retainedCount", retainedCount);
-        tag.setTag("recent", list(recent)); tag.setTag("craved", list(craved)); tag.setTag("boring", list(boring));
-        tag.setTag("fixedCraved", list(fixedCraved)); tag.setTag("fixedBoring", list(fixedBoring)); return tag;
+    public CompoundTag save(CompoundTag tag) {
+        tag.putLong("day", lastDay); tag.putInt("retainedCount", retainedCount);
+        tag.put("recent", list(recent)); tag.put("craved", list(craved)); tag.put("boring", list(boring));
+        tag.put("fixedCraved", list(fixedCraved)); tag.put("fixedBoring", list(fixedBoring)); return tag;
     }
-    private static NBTTagList list(Collection<String> strings) {
-        NBTTagList list = new NBTTagList(); strings.forEach(value -> list.appendTag(new NBTTagString(value))); return list;
+    private static ListTag list(Collection<String> strings) {
+        ListTag list = new ListTag(); strings.forEach(value -> list.add(StringTag.valueOf(value))); return list;
     }
-    private static List<String> strings(NBTTagCompound tag, String key) {
-        NBTTagList list = tag.getTagList(key, 8); List<String> result = new ArrayList<>();
-        for (int i = 0; i < list.tagCount(); i++) result.add(list.getStringTagAt(i)); return result;
+    private static List<String> strings(CompoundTag tag, String key) {
+        ListTag list = tag.getList(key, 8); List<String> result = new ArrayList<>();
+        for (int i = 0; i < list.size(); i++) result.add(list.getString(i)); return result;
     }
 }

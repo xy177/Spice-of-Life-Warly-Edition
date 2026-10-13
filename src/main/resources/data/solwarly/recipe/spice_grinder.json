@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "BSB",
+    "BFB",
+    "WBW"
+  ],
+  "key": {
+    "B": {
+      "item": "minecraft:bricks"
+    },
+    "S": {
+      "item": "minecraft:stone"
+    },
+    "F": {
+      "item": "minecraft:flint"
+    },
+    "W": {
+      "tag": "minecraft:wooden_fences"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "solwarly:spice_grinder"
+  }
+}

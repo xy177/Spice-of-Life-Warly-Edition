@@ -1,7 +1,7 @@
 package com.xy177.solwarly;
 
 import com.xy177.solwarly.diet.*;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundTag;
 import org.junit.Before;
 import org.junit.Test;
 import java.util.*;
@@ -71,13 +71,13 @@ public class DietMechanicsTest {
         data.eat("apple", "plain", 4, 2, 32);
         data.eat("apple", "solwarly:mixed:sugar+sugar+salt", 4, 6, 32);
         data.eat("apple", "solwarly:mixed:salt+salt+salt", 4, 9, 32);
-        NBTTagCompound save = data.serializeNBT();
-        net.minecraft.nbt.NBTTagList tastes = new net.minecraft.nbt.NBTTagList();
+        CompoundTag save = data.serializeNBT();
+        net.minecraft.nbt.ListTag tastes = new net.minecraft.nbt.ListTag();
         for (String flavor : Arrays.asList("plain", "solwarly:mixed:sugar+sugar+salt", "solwarly:mixed:salt+salt+salt"))
-            tastes.appendTag(new net.minecraft.nbt.NBTTagString(flavor));
-        save.getTagList("history", 10).getCompoundTagAt(0).setTag("flavors", tastes);
-        save.getTagList("meals", 10).getCompoundTagAt(1).setString("flavor", "solwarly:mixed:sugar+sugar+salt");
-        save.getTagList("meals", 10).getCompoundTagAt(2).setString("flavor", "solwarly:mixed:salt+salt+salt");
+            tastes.add(net.minecraft.nbt.StringTag.valueOf(flavor));
+        save.getList("history", 10).getCompound(0).put("flavors", tastes);
+        save.getList("meals", 10).getCompound(1).putString("flavor", "solwarly:mixed:sugar+sugar+salt");
+        save.getList("meals", 10).getCompound(2).putString("flavor", "solwarly:mixed:salt+salt+salt");
         DietData loaded = new DietData(); loaded.deserializeNBT(save);
         assertEquals(6, loaded.cumulative(), 0); assertEquals(3, loaded.mealCount());
         assertEquals(17. / 3, loaded.average(), .000001); assertEquals(1.25, loaded.variety(.25), 0);
@@ -96,7 +96,7 @@ public class DietMechanicsTest {
         assertTrue(data.refresh(3, 2, foods, new Random(1)));
         assertEquals(40, data.retainedCount); assertEquals(5, data.craved.size()); assertEquals(5, data.boring.size());
         assertTrue(Collections.disjoint(data.craved, data.boring));
-        AppetiteData restored = new AppetiteData(); restored.readFromNBT(data.writeToNBT(new NBTTagCompound()));
+        AppetiteData restored = new AppetiteData(); restored.readFromNBT(data.save(new CompoundTag()));
         assertEquals(data.craved, restored.craved);
         assertFalse(restored.refresh(3, 1, foods, new Random(2)));
         restored.setDirty(false);
@@ -106,7 +106,7 @@ public class DietMechanicsTest {
         assertEquals(data.craved, restored.craved);
         assertEquals(data.boring, restored.boring);
         AppetiteData restarted = new AppetiteData();
-        restarted.readFromNBT(restored.writeToNBT(new NBTTagCompound()));
+        restarted.readFromNBT(restored.save(new CompoundTag()));
         assertFalse(restarted.refresh(2, 1, foods, new Random(3)));
         assertEquals(data.craved, restarted.craved);
         assertTrue(restarted.refresh(3, 1, foods, new Random(3)));
@@ -159,7 +159,7 @@ public class DietMechanicsTest {
         assertEquals(6, data.cravedFoods().size()); assertEquals(7, data.boringFoods().size());
         data.refresh(1, 1, foods, new Random(3));
         assertEquals(1, data.state("fixed")); assertEquals(-1, data.state("disliked"));
-        AppetiteData client = new AppetiteData(); client.readFromNBT(data.writeToNBT(new NBTTagCompound()));
+        AppetiteData client = new AppetiteData(); client.readFromNBT(data.save(new CompoundTag()));
         assertEquals(data.cravedFoods(), client.cravedFoods()); assertEquals(data.boringFoods(), client.boringFoods());
         assertEquals(-1, client.state("conflict"));
         DietConfig.alwaysCraved = new String[0]; DietConfig.alwaysBoring = new String[0];

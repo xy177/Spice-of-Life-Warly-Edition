@@ -1,0 +1,26 @@
+{
+  "loader": "neoforge:obj",
+  "model": "solwarly:models/block/spice_grinder.obj",
+  "flip_v": false,
+  "automatic_culling": false,
+  "textures": {
+    "particle": "minecraft:block/bricks"
+  },
+  "visibility": {
+    "left_leg": false,
+    "right_leg": false,
+    "left_foot": false,
+    "right_foot": false,
+    "waist_axle": false,
+    "brick_jar": true,
+    "brick_neck_rim": true,
+    "smooth_stone_lid": true,
+    "stone_lid_knob": true,
+    "handle_-1_front": true,
+    "handle_-1_back": true,
+    "handle_-1_bar": true,
+    "handle_1_front": true,
+    "handle_1_back": true,
+    "handle_1_bar": true
+  }
+}

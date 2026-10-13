@@ -2,10 +2,10 @@ package com.xy177.solwarly.spice;
 
 import com.google.gson.*;
 import com.xy177.solwarly.SOLWarly;
-import net.minecraft.init.Items;
-import net.minecraft.item.*;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.*;
 import net.minecraft.nbt.*;
-import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.neoforged.fml.util.thread.EffectiveSide;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -18,27 +18,32 @@ public final class CustomSpices {
     private static String serverSnapshot;
     private static final List<SpiceRecipe> registered = new ArrayList<>();
     private static Map<String, CustomSpice> definitions() {
-        return serverDefinitions != null && FMLCommonHandler.instance().getEffectiveSide().isClient() ? serverDefinitions : local;
+        return serverDefinitions != null && EffectiveSide.get().isClient() ? serverDefinitions : local;
     }
     public static Collection<CustomSpice> all() { return Collections.unmodifiableCollection(definitions().values()); }
     public static CustomSpice find(String id) { return definitions().get(id); }
     public static void clearServerDefinitions() {
         serverDefinitions = null; serverRecipes = null; serverSnapshot = null;
-        net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new DefinitionsChanged());
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new DefinitionsChanged());
     }
     public static boolean owns(SpiceRecipe recipe) { return registered.contains(recipe); }
     public static Collection<SpiceRecipe> displayRecipes() {
-        return serverRecipes != null && FMLCommonHandler.instance().getEffectiveSide().isClient() ? serverRecipes : registered;
+        return serverRecipes != null && EffectiveSide.get().isClient() ? serverRecipes : registered;
     }
-    public static final class DefinitionsChanged extends net.minecraftforge.fml.common.eventhandler.Event {}
+    public static final class DefinitionsChanged extends net.neoforged.bus.api.Event {}
 
     public static void load(File modDirectory) {
         registered.forEach(SpiceRecipes::remove); registered.clear(); local.clear();
-        File directory = new File(modDirectory, "custom_spices");
+        loadDirectory(modDirectory, false);
+        loadDirectory(modDirectory, true);
+    }
+    private static void loadDirectory(File modDirectory, boolean accompaniment) {
+        String folder = accompaniment ? "custom_accompaniments" : "custom_spices";
+        File directory = new File(modDirectory, folder);
         try {
             Files.createDirectories(directory.toPath());
             File example = new File(directory, "_example.json");
-            if (!example.exists()) try (InputStream input = CustomSpices.class.getResourceAsStream("/assets/solwarly/custom_spices/_example.json")) {
+            if (!example.exists()) try (InputStream input = CustomSpices.class.getResourceAsStream("/assets/solwarly/" + folder + "/_example.json")) {
                 if (input == null) throw new IOException("Bundled example is missing");
                 Files.copy(input, example.toPath());
             }
@@ -49,60 +54,77 @@ public final class CustomSpices {
         for (File file : files) try (Reader reader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8)) {
             JsonObject json = new JsonParser().parse(reader).getAsJsonObject();
             if (json.has("enabled") && !json.get("enabled").getAsBoolean()) continue;
-            CustomSpice spice = new CustomSpice(json);
+            CustomSpice spice = new CustomSpice(json, accompaniment);
             if (Arrays.stream(SpiceKind.values()).anyMatch(kind -> kind.id().equals(spice.id())) || local.containsKey(spice.id()))
                 throw new IllegalArgumentException("Duplicate spice ID: " + spice.id());
-            JsonArray recipes = json.getAsJsonArray("recipes");
-            if (recipes == null || recipes.size() == 0) throw new IllegalArgumentException("At least one grinding recipe is required");
             List<SpiceRecipe> pending = new ArrayList<>();
-            for (JsonElement element : recipes) {
-                JsonObject spec = element.getAsJsonObject();
-                ItemStack input = stack(spec.getAsJsonObject("input"));
-                int x = CustomSpice.integer(spec.getAsJsonObject("input"), "count", 1, input.getMaxStackSize());
-                int y = CustomSpice.integer(spec, "output_count", 1, 64);
-                if (SpiceRecipes.find(input) != null || pending.stream().anyMatch(recipe -> recipe.matches(input)))
-                    throw new IllegalArgumentException("Conflicting grinding input: " + input.getItem().getRegistryName() + "@" + input.getMetadata());
-                ItemStack container = spec.has("return") ? (spec.get("return").isJsonNull() ? ItemStack.EMPTY : stack(spec.getAsJsonObject("return"))) : container(input);
-                pending.add(new SpiceRecipe(input, x, Seasoning.powder(Collections.singletonList(spice), 1), y, container));
+            if (accompaniment) {
+                ItemStack material = spice.material();
+                for (SpiceKind builtin : SpiceKind.values()) if (builtin.nativeMaterial() && builtin.available() && Seasoning.material(builtin).getItem() == material.getItem())
+                    throw new IllegalArgumentException("Material conflicts with built-in flavor: " + builtin.id());
+                if (local.values().stream().anyMatch(other -> other.matches(material)))
+                    throw new IllegalArgumentException("Duplicate accompaniment material");
+            } else {
+                JsonArray recipes = json.getAsJsonArray("recipes");
+                if (recipes == null || recipes.size() == 0) throw new IllegalArgumentException("At least one grinding recipe is required");
+                for (JsonElement element : recipes) {
+                    JsonObject spec = element.getAsJsonObject();
+                    ItemStack input = stack(spec.getAsJsonObject("input"));
+                    int x = CustomSpice.integer(spec.getAsJsonObject("input"), "count", 1, input.getMaxStackSize());
+                    int y = CustomSpice.integer(spec, "output_count", 1, 64);
+                    if (SpiceRecipes.find(input) != null || pending.stream().anyMatch(recipe -> recipe.matches(input)))
+                        throw new IllegalArgumentException("Conflicting grinding input: " + com.xy177.solwarly.registry.RegistryLookup.id(input.getItem()) + "@" + input.getDamageValue());
+                    ItemStack container = spec.has("return") ? (spec.get("return").isJsonNull() ? ItemStack.EMPTY : stack(spec.getAsJsonObject("return"))) : container(input);
+                    pending.add(new SpiceRecipe(input, x, Seasoning.powder(Collections.singletonList(spice), 1), y, container));
+                }
             }
             local.put(spice.id(), spice);
             pending.forEach(SpiceRecipes::register); registered.addAll(pending);
             SOLWarly.LOGGER.info("Loaded custom spice {} from {}", spice.id(), file.getName());
         } catch (IOException | RuntimeException e) {
-            SOLWarly.LOGGER.error("Skipping custom spice file {}: {}", file.getName(), e.getMessage());
+            SOLWarly.LOGGER.error("Skipping custom spice file {}: {}", file.getPath(), e.getMessage());
         }
     }
-    private static ItemStack stack(JsonObject spec) {
-        String id = CustomSpice.required(spec, "item"); Item item = Item.getByNameOrId(id);
+    static ItemStack stack(JsonObject spec) {
+        String id = CustomSpice.required(spec, "item"); Item item = com.xy177.solwarly.registry.RegistryLookup.item(id);
         if (item == null || item == Items.AIR) throw new IllegalArgumentException("Unknown item: " + id);
         int meta = spec.has("metadata") ? CustomSpice.integer(spec, "metadata", 0, 32766) : 0;
-        int count = spec.has("count") ? CustomSpice.integer(spec, "count", 1, item.getItemStackLimit()) : 1;
-        ItemStack stack = new ItemStack(item, count, meta);
-        if (spec.has("nbt")) try { stack.setTagCompound(JsonToNBT.getTagFromJson(spec.get("nbt").getAsString())); }
-        catch (NBTException e) { throw new IllegalArgumentException("Invalid input/return NBT", e); }
+        int count = spec.has("count") ? CustomSpice.integer(spec, "count", 1, item.getDefaultInstance().getMaxStackSize()) : 1;
+        ItemStack stack = new ItemStack(item, count);
+        if (spec.has("components")) {
+            var registries = net.minecraft.core.RegistryAccess.fromRegistryOfRegistries(net.minecraft.core.registries.BuiltInRegistries.REGISTRY);
+            var ops = net.minecraft.resources.RegistryOps.create(com.mojang.serialization.JsonOps.INSTANCE, registries);
+            stack.applyComponents(net.minecraft.core.component.DataComponentPatch.CODEC.parse(ops, spec.get("components"))
+                .getOrThrow(error -> new IllegalArgumentException("Invalid input/return components: " + error)));
+        }
+        if (meta != 0) stack.setDamageValue(meta);
+        if (spec.has("nbt")) try { com.xy177.solwarly.item.StackData.set(stack,TagParser.parseTag(spec.get("nbt").getAsString())); }
+        catch (com.mojang.brigadier.exceptions.CommandSyntaxException e) { throw new IllegalArgumentException("Invalid input/return NBT", e); }
         return stack;
     }
-    private static ItemStack container(ItemStack input) {
-        if (input.getItem().hasContainerItem(input)) return input.getItem().getContainerItem(input);
-        return input.getItem() == Items.POTIONITEM ? new ItemStack(Items.GLASS_BOTTLE) : ItemStack.EMPTY;
+    static ItemStack container(ItemStack input) {
+        if (input.getItem().hasCraftingRemainingItem(input)) return input.getItem().getCraftingRemainingItem(input);
+        return input.getItem() == Items.POTION ? new ItemStack(Items.GLASS_BOTTLE) : ItemStack.EMPTY;
     }
-    public static NBTTagList snapshot() {
-        NBTTagList result = new NBTTagList();
+    public static ListTag snapshot() {
+        ListTag result = new ListTag();
         for (CustomSpice spice : local.values()) {
             JsonObject client = new JsonParser().parse(spice.definition.toString()).getAsJsonObject();
             client.remove("_instructions");
-            result.appendTag(new NBTTagString(client.toString()));
+            result.add(StringTag.valueOf(client.toString()));
         }
         return result;
     }
-    public static void readSnapshot(NBTTagList list) {
+    public static void readSnapshot(ListTag list) {
         String signature = list.toString();
         if (signature.equals(serverSnapshot)) return;
         Map<String, CustomSpice> result = new TreeMap<>();
         List<SpiceRecipe> recipes = new ArrayList<>();
-        for (int i = 0; i < list.tagCount(); i++) {
-            CustomSpice spice = new CustomSpice(new JsonParser().parse(list.getStringTagAt(i)).getAsJsonObject());
+        for (int i = 0; i < list.size(); i++) {
+            JsonObject definition = new JsonParser().parse(list.getString(i)).getAsJsonObject();
+            CustomSpice spice = new CustomSpice(definition, definition.has("_accompaniment") && definition.get("_accompaniment").getAsBoolean());
             result.put(spice.id(), spice);
+            if (spice.accompaniment()) continue;
             for (JsonElement element : spice.definition.getAsJsonArray("recipes")) {
                 JsonObject spec = element.getAsJsonObject(); ItemStack input = stack(spec.getAsJsonObject("input"));
                 ItemStack container = spec.has("return") ? (spec.get("return").isJsonNull() ? ItemStack.EMPTY : stack(spec.getAsJsonObject("return"))) : container(input);
@@ -111,7 +133,7 @@ public final class CustomSpices {
             }
         }
         serverDefinitions = result; serverRecipes = recipes; serverSnapshot = signature;
-        net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new DefinitionsChanged());
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new DefinitionsChanged());
     }
     private CustomSpices() {}
 }

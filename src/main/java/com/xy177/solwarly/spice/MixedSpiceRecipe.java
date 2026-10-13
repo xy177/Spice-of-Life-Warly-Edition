@@ -1,41 +1,43 @@
 package com.xy177.solwarly.spice;
 
-import net.minecraft.inventory.InventoryCrafting;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.util.NonNullList;
-import net.minecraft.world.World;
-import net.minecraftforge.registries.IForgeRegistryEntry;
+import net.minecraft.world.item.crafting.CraftingInput;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.*;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.NonNullList;
+import net.minecraft.world.level.Level;
+
 import java.util.*;
 
-public final class MixedSpiceRecipe extends IForgeRegistryEntry.Impl<IRecipe> implements IRecipe {
-    private List<SpiceKind> ingredients(InventoryCrafting inventory) {
+public final class MixedSpiceRecipe extends CustomRecipe {
+    public MixedSpiceRecipe(CraftingBookCategory category) { super(category); }
+    private List<SpiceKind> ingredients(CraftingInput inventory) {
         List<SpiceKind> kinds = new ArrayList<>(); int catalysts = 0;
-        for (int i = 0; i < inventory.getSizeInventory(); i++) {
-            ItemStack stack = inventory.getStackInSlot(i); if (stack.isEmpty()) continue;
+        for (int i = 0; i < inventory.size(); i++) {
+            ItemStack stack = inventory.getItem(i); if (stack.isEmpty()) continue;
             if (SpiceConfig.matchesMixedCatalyst(stack)) { catalysts++; continue; }
-            List<SpiceKind> components = Seasoning.components(stack);
-            if (stack.getItem() != SpiceRegistry.spice || components.size() != 1 || components.contains(SpiceKind.RICE)) return Collections.emptyList();
+            List<SpiceKind> components = Seasoning.ingredient(stack);
+            if (Seasoning.mixed(stack) || components.size() != 1 || (components.get(0).accompaniment() || components.get(0) == SpiceKind.CREATIVE)) return Collections.emptyList();
             kinds.add(components.get(0));
         }
-        return catalysts == 1 && kinds.size() == 3 ? kinds : Collections.emptyList();
+        return catalysts == 1 && kinds.size() == SpiceConfig.mixedIngredients ? kinds : Collections.emptyList();
     }
-    public boolean matches(InventoryCrafting inventory, World world) { return !ingredients(inventory).isEmpty(); }
-    public ItemStack getCraftingResult(InventoryCrafting inventory) {
-        List<SpiceKind> kinds = ingredients(inventory); return kinds.isEmpty() ? ItemStack.EMPTY : Seasoning.powder(kinds, SpiceConfig.mixedCount);
+    public boolean matches(CraftingInput inventory, Level world) { return !ingredients(inventory).isEmpty(); }
+    public ItemStack assemble(CraftingInput inventory,net.minecraft.core.HolderLookup.Provider access) {
+        List<SpiceKind> kinds = ingredients(inventory); return kinds.isEmpty() ? ItemStack.EMPTY : Seasoning.mixedPowder(kinds, SpiceConfig.mixedCount);
     }
-    public NonNullList<ItemStack> getRemainingItems(InventoryCrafting inventory) {
-        NonNullList<ItemStack> result = NonNullList.withSize(inventory.getSizeInventory(), ItemStack.EMPTY);
+    public NonNullList<ItemStack> getRemainingItems(CraftingInput inventory) {
+        NonNullList<ItemStack> result = NonNullList.withSize(inventory.size(), ItemStack.EMPTY);
         if (matches(inventory, null)) for (int i = 0; i < result.size(); i++) {
-            ItemStack stack = inventory.getStackInSlot(i);
+            ItemStack stack = inventory.getItem(i);
             if (SpiceConfig.matchesMixedCatalyst(stack)) {
-                if (SpiceConfig.consumeMixedCatalyst) result.set(i, net.minecraftforge.common.ForgeHooks.getContainerItem(stack));
+                if (SpiceConfig.consumeMixedCatalyst) result.set(i, stack.getCraftingRemainingItem());
                 else { ItemStack returned = stack.copy(); returned.setCount(1); result.set(i, returned); }
             }
         }
         return result;
     }
-    public boolean canFit(int width, int height) { return width * height >= 4; }
-    public ItemStack getRecipeOutput() { return ItemStack.EMPTY; }
-    public boolean isDynamic() { return true; }
+    public boolean canCraftInDimensions(int width, int height) { return width * height >= SpiceConfig.mixedIngredients + 1; }
+        public RecipeSerializer<?> getSerializer() { return SpiceRegistry.MIXED.get(); }
 }

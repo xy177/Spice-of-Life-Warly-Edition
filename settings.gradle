@@ -1,1 +1,7 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        maven { url = 'https://maven.neoforged.net/releases' }
+    }
+}
 rootProject.name = 'Spice-of-Life-Warly-Edition'
