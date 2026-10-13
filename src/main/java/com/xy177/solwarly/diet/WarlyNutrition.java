@@ -8,9 +8,9 @@ import squeek.applecore.api.food.FoodValues;
 public final class WarlyNutrition {
     public static FoodValues scale(FoodValues values, double multiplier) {
         if (multiplier == 1) return values;
-        int hunger = Math.max(0, (int) Math.round(values.hunger * multiplier));
+        int hunger = com.xy177.solwarly.spice.Seasoning.hunger(values.hunger * multiplier);
         float saturation = (float) (values.getUnboundedSaturationIncrement() * multiplier);
-        return hunger > 0 ? new FoodValues(hunger, saturation / (2 * hunger)) : new ZeroHungerValues(saturation);
+        return hunger > 0 ? new FoodValues(hunger, saturation / (2.0F * hunger)) : new ZeroHungerValues(saturation);
     }
 
     public static void restoreZeroHungerSaturation(FoodEvent.FoodEaten event) {

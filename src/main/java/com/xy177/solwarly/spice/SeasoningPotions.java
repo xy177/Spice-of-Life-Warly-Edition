@@ -22,17 +22,18 @@ public final class SeasoningPotions {
         return potion.getRegistryName() != null && SCALING.contains(potion.getRegistryName().toString());
     }
     public static List<Entry> additions(List<SpiceKind> kinds, Map<Potion, PotionEffect> original) {
+        kinds = Seasoning.effectKinds(kinds);
         List<Entry> result = new ArrayList<>();
         for (SpiceKind kind : new LinkedHashSet<>(kinds)) {
-            int copies = Collections.frequency(kinds, kind);
+            long copies = Seasoning.amount(kinds, kind);
             if (kind instanceof CustomSpice) { result.addAll(((CustomSpice) kind).effects(copies)); continue; }
             if (kind.fruit()) { result.addAll(fruit(kind, copies)); continue; }
             Potion potion = kind.potion(); if (potion == null) continue;
             boolean scaling = scales(potion);
             int duration = SpiceConfig.durations.get(kind);
-            int amplifier = scaling ? copies - 1 : 0;
+            int amplifier = scaling ? Seasoning.amplifier((long) copies - 1) : 0;
             if (kind == SpiceKind.HAM) duration = original.containsKey(potion) ? SpiceConfig.hamExtension : SpiceConfig.hamDuration;
-            if (!scaling) duration = (int) Math.round(duration * Seasoning.durationScale(copies));
+            if (!scaling) duration = Seasoning.ticks(duration * Seasoning.durationScale(copies));
             if (duration > 0) result.add(new Entry(new PotionEffect(potion, duration, amplifier), 1));
         }
         return result;
@@ -69,15 +70,15 @@ public final class SeasoningPotions {
             SOLWarly.LOGGER.error("Could not read Fruits Delight Legacy jam effects", e);
         }
     }
-    private static List<Entry> fruit(SpiceKind kind, int copies) {
+    private static List<Entry> fruit(SpiceKind kind, long copies) {
         List<Entry> result = new ArrayList<>();
         for (Entry entry : fruitEffects.getOrDefault(kind, Collections.emptyList())) {
             PotionEffect effect = entry.effect;
             boolean scaling = scales(effect.getPotion());
             int duration = Math.max(effect.getDuration(), SpiceConfig.fruitMinimumDuration);
             result.add(new Entry(new PotionEffect(effect.getPotion(), scaling ? duration
-                : (int) Math.round(duration * Seasoning.durationScale(copies)),
-                effect.getAmplifier() + (scaling ? copies - 1 : 0)), entry.chance));
+                : Seasoning.ticks(duration * Seasoning.durationScale(copies)),
+                Seasoning.amplifier((long) effect.getAmplifier() + (scaling ? copies - 1L : 0))), entry.chance));
         }
         return result;
     }

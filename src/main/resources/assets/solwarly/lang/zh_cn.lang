@@ -188,3 +188,13 @@ solwarly.command.mode_set=已将 %s 的食物多样性模式切换为 %s
 solwarly.command.mode.true=沃利模式
 solwarly.command.mode.false=默认模式
 solwarly.command.mode.default=与配置文件同步
+
+item.solwarly.spice.creative.name=创造模式调味料
+solwarly.book.grinder=调料研磨器
+solwarly.book.grinder.1=右键按每批用量投入原料；空手右键取回两个输入槽的原料。每批制作需要3秒。
+solwarly.book.grinder.2=顶部和侧面可输入、取回原料；底部只取成品。支持单原料和双原料配方，优先制作已凑齐的双原料配方。
+solwarly.book.grinder.3=单、双原料配方重合时先工作等待5秒，再制作单原料。连续制作不重复等待；未绑定时红石信号强制单输入。
+solwarly.book.grinder.4=手持单种调味粉潜行右键绑定配方，空手潜行右键解除。绑定优先于红石，忽略等待；上方虚影轮换展示成品及原料。
+solwarly.book.grinder.5=被送出的原料、成品及容器优先放入下方已配置漏斗或管道，放不下的部分才掉落。普通食物最多加两份佐料；粉末与佐料互斥。
+
+solwarly.spice.accompaniment=可作为佐料，与食物合成

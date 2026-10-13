@@ -15,14 +15,14 @@ public final class MixedSpiceRecipe extends IForgeRegistryEntry.Impl<IRecipe> im
             ItemStack stack = inventory.getStackInSlot(i); if (stack.isEmpty()) continue;
             if (SpiceConfig.matchesMixedCatalyst(stack)) { catalysts++; continue; }
             List<SpiceKind> components = Seasoning.components(stack);
-            if (stack.getItem() != SpiceRegistry.spice || components.size() != 1 || components.contains(SpiceKind.RICE)) return Collections.emptyList();
+            if (stack.getItem() != SpiceRegistry.spice || Seasoning.mixed(stack) || components.size() != 1 || components.stream().anyMatch(SpiceKind::accompaniment) || components.contains(SpiceKind.CREATIVE)) return Collections.emptyList();
             kinds.add(components.get(0));
         }
-        return catalysts == 1 && kinds.size() == 3 ? kinds : Collections.emptyList();
+        return catalysts == 1 && kinds.size() == SpiceConfig.mixedIngredients ? kinds : Collections.emptyList();
     }
     public boolean matches(InventoryCrafting inventory, World world) { return !ingredients(inventory).isEmpty(); }
     public ItemStack getCraftingResult(InventoryCrafting inventory) {
-        List<SpiceKind> kinds = ingredients(inventory); return kinds.isEmpty() ? ItemStack.EMPTY : Seasoning.powder(kinds, SpiceConfig.mixedCount);
+        List<SpiceKind> kinds = ingredients(inventory); return kinds.isEmpty() ? ItemStack.EMPTY : Seasoning.mixedPowder(kinds, SpiceConfig.mixedCount);
     }
     public NonNullList<ItemStack> getRemainingItems(InventoryCrafting inventory) {
         NonNullList<ItemStack> result = NonNullList.withSize(inventory.getSizeInventory(), ItemStack.EMPTY);
@@ -35,7 +35,7 @@ public final class MixedSpiceRecipe extends IForgeRegistryEntry.Impl<IRecipe> im
         }
         return result;
     }
-    public boolean canFit(int width, int height) { return width * height >= 4; }
+    public boolean canFit(int width, int height) { return width * height >= SpiceConfig.mixedIngredients + 1; }
     public ItemStack getRecipeOutput() { return ItemStack.EMPTY; }
     public boolean isDynamic() { return true; }
 }

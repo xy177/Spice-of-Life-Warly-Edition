@@ -11,7 +11,8 @@
       "effects 的1、2、3分别表示粉末在调味中出现一份、两份、三份时的完整效果列表；三档独立填写，不自动增强。空数组表示该档没有药水效果。可以填写多个不同效果。",
       "potion 为原版或模组药水注册名，level 从1开始（1为Ⅰ），duration_seconds 为持续秒数（允许小数，最少0.05秒）。自定义粉可与内置粉混合，所有混合粉仍共用一个混合口味。",
       "同一种药水与原食物效果合并时，时长相加、等级取较高；重复食用刷新而不无限累加玩家已有时长。diversity_multiplier 默认1.2，只影响多样性，不改变美食阅历基础收益。",
-      "有效自定义粉会出现在创造物品栏、食物书未尝口味、JEI研磨和混合配方中；服务器会同步名称、颜色和效果，客户端不需要复制此JSON。"
+      "有效自定义粉会出现在创造物品栏、食物书未尝口味、JEI研磨和混合配方中；服务器会同步名称、颜色和效果，客户端不需要复制此JSON。",
+      "可额外填写 effects.4、effects.5 等更高份数档；未填写的高档从第三档继续增强等级或按时长倍率外推。重复修饰只显示至第三档，食物药水行显示实际效果。药水等级最高128，时长最多2147483647刻。"
     ],
     "en_us": [
       "Files starting with _ are examples and are not loaded. Copy to another filename, set enabled to true, and restart the game/server.",
@@ -24,7 +25,8 @@
       "effects keys 1, 2 and 3 specify complete, independent effect lists for that many copies in a seasoning. No automatic scaling is applied. [] gives no effects; multiple distinct effects are allowed.",
       "potion is a vanilla/mod registry ID; level starts at 1 (I); duration_seconds is in seconds (fractions allowed, minimum 0.05). Custom spices mix with built-ins; all blends still share one mixed dietary flavor.",
       "Matching food effects combine by adding duration and taking the higher level. Repeated meals refresh rather than accumulate existing player durations. diversity_multiplier defaults to 1.2 and affects diversity only.",
-      "Valid spices appear in creative inventory, untasted flavors, JEI grinding and mixing. Definitions are synced by the server; clients do not need a copy of the JSON."
+      "Valid spices appear in creative inventory, untasted flavors, JEI grinding and mixing. Definitions are synced by the server; clients do not need a copy of the JSON.",
+      "Optional effects.4, effects.5 and higher tiers specify exact effects. Missing higher tiers extrapolate levels or duration from tier 3. Repeat descriptions stop at tier 3; food potion lines show the actual effects. Levels cap at 128 and durations at 2147483647 ticks."
     ]
   },
   "enabled": false,
@@ -32,13 +34,55 @@
   "color": "#74A34C",
   "diversity_multiplier": 1.2,
   "translations": {
-    "zh_cn": {"name": "草本调味粉", "prefix": "草本风味", "suffix": "", "tooltip": "清新草本，让脚步更轻快。\n为这一餐增添自然风味。"},
-    "en_us": {"name": "Herb Spice Powder", "prefix": "Herbed", "suffix": "", "tooltip": "Fresh herbs put a spring in your step.\nAdd a natural flavor to your meal."}
+    "zh_cn": {
+      "name": "草本调味粉",
+      "prefix": "草本风味",
+      "suffix": "",
+      "tooltip": "清新草本，让脚步更轻快。\n为这一餐增添自然风味。"
+    },
+    "en_us": {
+      "name": "Herb Spice Powder",
+      "prefix": "Herbed",
+      "suffix": "",
+      "tooltip": "Fresh herbs put a spring in your step.\nAdd a natural flavor to your meal."
+    }
   },
-  "recipes": [{"input": {"item": "minecraft:tallgrass", "metadata": 1, "count": 3}, "output_count": 1}],
+  "recipes": [
+    {
+      "input": {
+        "item": "minecraft:tallgrass",
+        "metadata": 1,
+        "count": 3
+      },
+      "output_count": 1
+    }
+  ],
   "effects": {
-    "1": [{"potion": "minecraft:speed", "level": 1, "duration_seconds": 120}],
-    "2": [{"potion": "minecraft:speed", "level": 2, "duration_seconds": 150}],
-    "3": [{"potion": "minecraft:speed", "level": 3, "duration_seconds": 180}, {"potion": "minecraft:haste", "level": 1, "duration_seconds": 90}]
+    "1": [
+      {
+        "potion": "minecraft:speed",
+        "level": 1,
+        "duration_seconds": 120
+      }
+    ],
+    "2": [
+      {
+        "potion": "minecraft:speed",
+        "level": 2,
+        "duration_seconds": 150
+      }
+    ],
+    "3": [
+      {
+        "potion": "minecraft:speed",
+        "level": 3,
+        "duration_seconds": 180
+      },
+      {
+        "potion": "minecraft:haste",
+        "level": 1,
+        "duration_seconds": 90
+      }
+    ]
   }
 }

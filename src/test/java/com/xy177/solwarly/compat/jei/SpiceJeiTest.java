@@ -320,4 +320,12 @@ public class SpiceJeiTest {
             else assertTrue(recipe.getRemainingItems(inventory).get(3).isEmpty());
         }
     }
+    @Test public void dualRecipeDisplaysIndependentIngredientAndReturnCounts() {
+        SpiceRecipe recipe=new SpiceRecipe(new ItemStack(Items.WHEAT),3,new ItemStack(Items.CARROT),2,
+            ItemSpice.create("salt",0xeeeeee,1),4,new ItemStack(Items.BOWL),new ItemStack(Items.GLASS_BOTTLE));
+        SpiceJeiPlugin.Wrapper wrapper=SpiceJeiPlugin.Wrapper.grinding(recipe);
+        assertEquals(2,wrapper.inputs.size()); assertEquals(3,wrapper.inputs.get(0).getCount()); assertEquals(2,wrapper.inputs.get(1).getCount());
+        assertEquals(3,wrapper.outputs.size()); assertEquals(4,wrapper.outputs.get(0).getCount());
+        assertEquals(3,wrapper.outputs.get(1).getCount()); assertEquals(2,wrapper.outputs.get(2).getCount());
+    }
 }

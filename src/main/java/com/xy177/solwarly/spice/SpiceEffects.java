@@ -23,11 +23,23 @@ public final class SpiceEffects {
         final List<SpiceKind> kinds;
         final float saturation;
         final Map<Potion, PotionEffect> original = new LinkedHashMap<>();
-        Meal(List<SpiceKind> kinds, float saturation) { this.kinds = kinds; this.saturation = saturation; }
+        Meal(List<SpiceKind> kinds, float saturation) { this.kinds = Seasoning.effectKinds(kinds); this.saturation = saturation; }
     }
     @SubscribeEvent(priority = EventPriority.LOWEST) public static void foodValues(FoodEvent.GetFoodValues event) {
         if (event.foodValues == null) return;
-        if (Seasoning.seasoned(event.food) && Seasoning.components(event.food).contains(SpiceKind.RICE)) event.foodValues = riceValues(event.foodValues);
+        if (Seasoning.seasoned(event.food)) {
+            List<SpiceKind> kinds = Seasoning.effectKinds(Seasoning.components(event.food));
+            double hunger = event.foodValues.hunger;
+            double saturation = event.foodValues.getUnboundedSaturationIncrement();
+            for (SpiceKind kind : new LinkedHashSet<>(kinds)) {
+                long copies = Seasoning.amount(kinds, kind);
+                if (kind == SpiceKind.RICE) { hunger += SpiceConfig.riceHunger * copies; saturation += SpiceConfig.riceSaturation * copies; }
+                if (kind instanceof CustomSpice && kind.accompaniment()) {
+                    hunger += ((CustomSpice) kind).hungerBonus * copies; saturation += ((CustomSpice) kind).saturationBonus * copies;
+                }
+            }
+            event.foodValues = new FoodValues(Seasoning.hunger(hunger), hunger > 0 ? (float) Math.min(Float.MAX_VALUE, saturation / (2.0 * Seasoning.hunger(hunger))) : 0);
+        }
     }
     @SubscribeEvent(priority = EventPriority.LOWEST) public static void appetizingValues(FoodEvent.GetPlayerFoodValues event) {
         if (event.foodValues == null || event.player == null) return;
@@ -37,14 +49,17 @@ public final class SpiceEffects {
     }
     public static FoodValues appetizingValues(FoodValues original, int level) {
         double scale = 1 + SpiceConfig.appetiteBase + SpiceConfig.appetitePerLevel * level;
-        int hunger = (int) Math.round(original.hunger * scale);
+        int hunger = Seasoning.hunger(original.hunger * scale);
         float saturation = (float) (original.getUnboundedSaturationIncrement() * scale);
-        return new FoodValues(hunger, hunger > 0 ? saturation / (2 * hunger) : 0);
+        return new FoodValues(hunger, hunger > 0 ? saturation / (2.0F * hunger) : 0);
     }
     public static FoodValues riceValues(FoodValues original) {
-        int hunger = original.hunger + SpiceConfig.riceHunger;
-        float saturation = original.getUnboundedSaturationIncrement() + (float) SpiceConfig.riceSaturation;
-        return new FoodValues(hunger, hunger > 0 ? saturation / (2 * hunger) : 0);
+        return riceValues(original, 1);
+    }
+    public static FoodValues riceValues(FoodValues original, int servings) {
+        int hunger = Seasoning.hunger(original.hunger + (double) SpiceConfig.riceHunger * servings);
+        float saturation = original.getUnboundedSaturationIncrement() + (float) (SpiceConfig.riceSaturation * servings);
+        return new FoodValues(hunger, hunger > 0 ? saturation / (2.0F * hunger) : 0);
     }
     @SubscribeEvent(priority = EventPriority.LOW) public static void useStarted(LivingEntityUseItemEvent.Start event) {
         if (!(event.getEntityLiving() instanceof EntityPlayer)) return;
@@ -88,8 +103,8 @@ public final class SpiceEffects {
             Map<Potion, PotionEffect> effects = apply(player, meal.kinds, meal.original);
             if (meal.kinds.contains(SpiceKind.CHEESE)) cheese(player);
             if (meal.kinds.contains(SpiceKind.MYSTERY))
-                cure(player, mysteryCureCount(Collections.frequency(meal.kinds, SpiceKind.MYSTERY)));
-            if (meal.kinds.contains(SpiceKind.DRAGON)) share(player, effects, meal.saturation, Collections.frequency(meal.kinds, SpiceKind.DRAGON));
+                cure(player, mysteryCureCount(Seasoning.amount(meal.kinds, SpiceKind.MYSTERY)));
+            if (meal.kinds.contains(SpiceKind.DRAGON)) share(player, effects, meal.saturation, Seasoning.amount(meal.kinds, SpiceKind.DRAGON));
             if (meal.kinds.contains(SpiceKind.CHORUS) && player.isSneaking()) teleport(player);
         }
     }
@@ -126,25 +141,33 @@ public final class SpiceEffects {
         Collections.shuffle(effects, player.getRNG());
         for (int i = 0; i < Math.min(count, effects.size()); i++) player.removePotionEffect(effects.get(i));
     }
-    public static int mysteryCureCount(int copies) {
-        return copies >= 3 ? 4 : Math.max(0, copies);
+    public static int mysteryCureCount(int copies) { return mysteryCureCount((long) copies); }
+    public static int mysteryCureCount(long copies) {
+        return copies >= 3 ? (int) Math.min(Integer.MAX_VALUE, 2L * copies - 2) : (int) Math.max(0, copies);
     }
-    public static void share(EntityPlayer eater, Map<Potion, PotionEffect> effects, float saturation, int copies) {
+    public static void share(EntityPlayer eater, Map<Potion, PotionEffect> effects, float saturation, int copies) { share(eater, effects, saturation, (long) copies); }
+    public static void share(EntityPlayer eater, Map<Potion, PotionEffect> effects, float saturation, long copies) {
         double scale = SpiceConfig.sharingPerCopy * copies, radius = SpiceConfig.sharingRadius;
         if (radius <= 0 || scale <= 0) return;
         List<EntityPlayer> players = eater.world.getEntitiesWithinAABB(EntityPlayer.class, eater.getEntityBoundingBox().grow(radius));
         for (EntityPlayer recipient : players) {
-            if (recipient == eater || recipient.isDead || recipient.getDistanceSq(eater) > radius * radius) continue;
+            if (recipient == eater || !recipient.isEntityAlive() || recipient.getDistanceSq(eater) > radius * radius) continue;
             addSaturation(recipient, (float) Math.max(0, saturation * scale));
             for (PotionEffect effect : effects.values()) if (!effect.getPotion().isBadEffect()) {
-                int ticks = (int) Math.round(effect.getDuration() * scale);
+                int ticks = Seasoning.ticks(effect.getDuration() * scale);
                 if (ticks > 0) refresh(recipient, new PotionEffect(effect.getPotion(), ticks, effect.getAmplifier(), effect.getIsAmbient(), effect.doesShowParticles()));
             }
         }
     }
     public static void addSaturation(EntityPlayer player, float amount) {
         net.minecraft.util.FoodStats food = player.getFoodStats();
-        food.setFoodSaturationLevel(Math.min(food.getFoodLevel(), food.getSaturationLevel() + amount));
+        float before = food.getSaturationLevel();
+        food.setFoodSaturationLevel(Math.min(food.getFoodLevel(), before + amount));
+        if (food.getSaturationLevel() != before && player instanceof net.minecraft.entity.player.EntityPlayerMP) {
+            net.minecraft.entity.player.EntityPlayerMP recipient = (net.minecraft.entity.player.EntityPlayerMP) player;
+            recipient.connection.sendPacket(new net.minecraft.network.play.server.SPacketUpdateHealth(
+                recipient.getHealth(), food.getFoodLevel(), food.getSaturationLevel()));
+        }
     }
     public static boolean teleport(EntityPlayer player) {
         double startX = player.posX, startY = player.posY, startZ = player.posZ;

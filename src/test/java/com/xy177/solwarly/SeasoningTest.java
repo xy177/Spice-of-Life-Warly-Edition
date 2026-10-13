@@ -63,9 +63,9 @@ public class SeasoningTest {
             com.xy177.solwarly.api.FlavorAPI.registerVariants(new ResourceLocation("solwarly:test"), Seasoning::variants);
             ItemStack apple = new ItemStack(Items.APPLE);
             int singles = 0, powders = 0;
-            for (SpiceKind kind : SpiceKind.values()) if (kind.available()) { singles++; if (kind != SpiceKind.RICE) powders++; }
+            for (SpiceKind kind : SpiceKind.values()) if (kind != SpiceKind.CREATIVE && kind.available()) { singles++; if (kind != SpiceKind.RICE) powders++; }
             List<ItemStack> all = com.xy177.solwarly.api.FlavorAPI.variants(apple);
-            assertEquals(1 + singles + (powders > 0 ? 1 : 0), all.size());
+            assertEquals(1 + singles + (SpiceKind.RICE.available() ? 1 : 0) + (powders > 0 ? 1 : 0), all.size());
             assertEquals("plain", com.xy177.solwarly.api.FlavorAPI.resolve(all.get(0)).id);
             Set<String> ids = new HashSet<>();
             for (ItemStack food : all) assertTrue(ids.add(com.xy177.solwarly.api.FlavorAPI.resolve(food).id));
@@ -227,4 +227,41 @@ public class SeasoningTest {
         SpiceEffects.mining(speed); assertEquals(16, speed.getNewSpeed(), .00001);
     }
     private static final class TestPotion extends Potion { TestPotion(String id) { super(false, 0xFFFFFF); setRegistryName(id); } }
+    @Test public void ordinaryFoodAcceptsTwoRiceServingsInAnySlotsAndNeverAThird() {
+        SeasonFoodRecipe recipe=new SeasonFoodRecipe();
+        for(int a=0;a<9;a++)for(int b=0;b<9;b++)if(a!=b) {
+            ItemStack[] stacks=new ItemStack[9]; Arrays.fill(stacks,ItemStack.EMPTY); stacks[a]=new ItemStack(Items.APPLE); stacks[b]=rice();
+            InventoryCrafting input=grid(stacks); ItemStack first=recipe.getCraftingResult(input);
+            assertEquals(Collections.singletonList(SpiceKind.RICE),Seasoning.components(first));
+            stacks[a]=first; input=grid(stacks); ItemStack second=recipe.getCraftingResult(input);
+            assertEquals(Arrays.asList(SpiceKind.RICE,SpiceKind.RICE),Seasoning.components(second));
+            assertEquals(Items.BOWL,recipe.getRemainingItems(input).get(b).getItem()); assertTrue(recipe.getRemainingItems(input).get(a).isEmpty());
+            stacks[a]=second; assertFalse(recipe.matches(grid(stacks),null));
+        }
+        ItemStack second=recipe.getCraftingResult(grid(new ItemStack(Items.APPLE),rice(),rice()));
+        assertEquals("solwarly:meal:rice+rice",Seasoning.flavor(second).id); assertEquals(1.2,Seasoning.flavor(second).diversityMultiplier,0);
+        FoodEvent.GetFoodValues values=new FoodEvent.GetFoodValues(second,new FoodValues(4,.3F)); SpiceEffects.foodValues(values);
+        assertEquals(18,values.foodValues.hunger); assertEquals(16.4,values.foodValues.getUnboundedSaturationIncrement(),.001);
+    }
+    @Test public void creativeSeasoningCombinesAvailableEffectsButIsNotMixedOrRequired() {
+        ItemStack creative=powder(SpiceKind.CREATIVE); assertTrue(SpiceRegistry.spice.hasEffect(creative));
+        ItemStack food=new SeasonFoodRecipe().getCraftingResult(grid(creative,new ItemStack(Items.APPLE)));
+        assertTrue(Seasoning.creative(food));
+        List<SpiceKind> all=Seasoning.effectKinds(Seasoning.components(food));
+        assertFalse(all.contains(SpiceKind.CREATIVE)); assertTrue(all.contains(SpiceKind.RICE));
+        assertFalse(Seasoning.variants(new ItemStack(Items.APPLE)).stream().anyMatch(Seasoning::creative));
+        assertFalse(new MixedSpiceRecipe().matches(grid(creative,powder(SpiceKind.SALT),powder(SpiceKind.SUGAR),new ItemStack(Items.NETHER_STAR)),null));
+        List<SeasoningPotions.Entry> actual=SeasoningPotions.additions(Seasoning.components(food),Collections.emptyMap());
+        List<SeasoningPotions.Entry> expected=new ArrayList<>();
+        for(SpiceKind kind:all) expected.addAll(SeasoningPotions.additions(Collections.singletonList(kind),Collections.emptyMap()));
+        assertEquals(expected.size(),actual.size());
+        for(int i=0;i<expected.size();i++) { assertEquals(expected.get(i).effect.getPotion(),actual.get(i).effect.getPotion()); assertEquals(expected.get(i).effect.getDuration(),actual.get(i).effect.getDuration()); }
+        EntityPlayer player=mock(EntityPlayer.class); player.world=mock(net.minecraft.world.World.class);
+        String[] oldA=com.xy177.solwarly.diet.DietConfig.attributes,oldE=com.xy177.solwarly.diet.DietConfig.effects;
+        try {
+            com.xy177.solwarly.diet.DietConfig.attributes=new String[]{"42|generic.maxHealth|8|0"}; com.xy177.solwarly.diet.DietConfig.effects=new String[]{"87.5|minecraft:speed|0"};
+            assertEquals(87.5,com.xy177.solwarly.diet.DietRuntime.contribution(player,food,.03),0);
+            assertEquals(.03,com.xy177.solwarly.diet.DietRuntime.contribution(player,new ItemStack(Items.APPLE),.03),0);
+        } finally { com.xy177.solwarly.diet.DietConfig.attributes=oldA; com.xy177.solwarly.diet.DietConfig.effects=oldE; }
+    }
 }

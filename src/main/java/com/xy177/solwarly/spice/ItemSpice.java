@@ -13,15 +13,16 @@ public final class ItemSpice extends Item {
     @Override @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
     public void getSubItems(net.minecraft.creativetab.CreativeTabs tab, net.minecraft.util.NonNullList<ItemStack> items) {
         if (isInCreativeTab(tab)) for (SpiceKind kind : SpiceKind.all())
-            if (kind != SpiceKind.RICE && kind.available()) items.add(Seasoning.powder(java.util.Collections.singletonList(kind), 1));
+            if (!kind.accompaniment() && kind.available()) items.add(Seasoning.powder(java.util.Collections.singletonList(kind), 1));
     }
     @Override public String getItemStackDisplayName(ItemStack stack) {
         java.util.List<SpiceKind> kinds = Seasoning.components(stack);
-        if (kinds.size() == 1 && kinds.get(0) instanceof CustomSpice) return ((CustomSpice) kinds.get(0)).text("name");
+        if (!Seasoning.mixed(kinds) && kinds.size() == 1 && kinds.get(0) instanceof CustomSpice) return ((CustomSpice) kinds.get(0)).text("name");
         return kinds.isEmpty() ? super.getItemStackDisplayName(stack) : new net.minecraft.util.text.TextComponentTranslation(
-            "item.solwarly.spice." + (kinds.size() > 1 ? "mixed" : kinds.get(0).id()) + ".name").getUnformattedText();
+            "item.solwarly.spice." + (Seasoning.mixed(kinds) ? "mixed" : kinds.get(0).id()) + ".name").getUnformattedText();
     }
 
+    @Override public boolean hasEffect(ItemStack stack) { return Seasoning.creative(stack) || super.hasEffect(stack); }
     public static ItemStack create(String flavor, int color, int count) {
         if (flavor == null || flavor.isEmpty() || count < 1 || count > 64)
             throw new IllegalArgumentException("Spice requires a type and a stack count between 1 and 64");

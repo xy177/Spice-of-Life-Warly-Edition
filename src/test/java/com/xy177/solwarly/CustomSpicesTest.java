@@ -205,10 +205,100 @@ public class CustomSpicesTest {
             catch (IllegalArgumentException expected) { assertTrue(expected.getMessage().contains("tooltip must be a string")); }
         } finally { localeField.set(null, previousLocale); }
     }
+    @Test @SuppressWarnings("unchecked") public void foodPotionTooltipIncludesConfiguredLevelAndBlueDuration() throws Exception {
+        JsonObject json = sideExample();
+        json.getAsJsonArray("effects").get(0).getAsJsonObject().addProperty("level", 3);
+        writeSide("carrot.json", json); CustomSpices.load(directory);
+        CustomSpice side = CustomSpices.find("custom:carrot_side"), rendered = spy(side);
+        doAnswer(call -> side.text("en_us", call.getArgument(0))).when(rendered).text(anyString());
+        ((Map<String, CustomSpice>)localField.get(null)).put(side.id(), rendered);
+        Field localeField = net.minecraft.client.resources.I18n.class.getDeclaredField("i18nLocale"); localeField.setAccessible(true);
+        Object previousLocale = localeField.get(null);
+        Field modsField = net.minecraftforge.fml.common.Loader.class.getDeclaredField("namedMods"); modsField.setAccessible(true);
+        Object previousMods = modsField.get(net.minecraftforge.fml.common.Loader.instance());
+        try {
+            modsField.set(net.minecraftforge.fml.common.Loader.instance(), Collections.emptyMap());
+            net.minecraft.client.resources.Locale locale = mock(net.minecraft.client.resources.Locale.class);
+            when(locale.formatMessage(anyString(), any(Object[].class))).thenAnswer(call -> {
+                String key = call.getArgument(0); Object[] arguments = call.getArgument(1);
+                if (key.equals("potion.potency.2")) return "III";
+                if (key.equals("solwarly.tooltip.food.effect")) return arguments[0] + " (" + arguments[1] + ")";
+                return key;
+            });
+            localeField.set(null, locale);
+            String effect = tooltip(Seasoning.apply(new ItemStack(Items.APPLE), Arrays.asList(rendered, rendered))).get(1);
+            assertTrue(effect.contains(net.minecraft.util.text.TextFormatting.BLUE + " III"));
+            assertTrue(effect.contains(net.minecraft.util.text.TextFormatting.BLUE + " (1:00"));
+            assertTrue(effect.endsWith(net.minecraft.util.text.TextFormatting.BLUE + ")"));
+        } finally {
+            localeField.set(null, previousLocale);
+            modsField.set(net.minecraftforge.fml.common.Loader.instance(), previousMods);
+        }
+    }
     private List<String> tooltip(ItemStack stack) {
         List<String> lines = new ArrayList<>(Collections.singletonList("Food"));
         SpiceTooltips.tooltip(new net.minecraftforge.event.entity.player.ItemTooltipEvent(stack, null, lines,
             net.minecraft.client.util.ITooltipFlag.TooltipFlags.NORMAL));
         return lines;
+    }
+
+    private JsonObject sideExample() throws Exception {
+        try (Reader reader = new InputStreamReader(getClass().getResourceAsStream("/assets/solwarly/custom_accompaniments/_example.json"), StandardCharsets.UTF_8)) {
+            JsonObject json = new JsonParser().parse(reader).getAsJsonObject(); json.addProperty("enabled", true); return json;
+        }
+    }
+    private void writeSide(String filename, JsonObject json) throws Exception {
+        Files.write(new File(new File(directory,"custom_accompaniments"),filename).toPath(), json.toString().getBytes(StandardCharsets.UTF_8));
+    }
+    @Test public void accompanimentExampleIsGeneratedDisabledAndPreservesEdits() throws Exception {
+        File example = new File(directory,"custom_accompaniments/_example.json");
+        assertTrue(example.isFile()); assertTrue(CustomSpices.all().isEmpty());
+        Files.write(example.toPath(), "user changes".getBytes(StandardCharsets.UTF_8)); CustomSpices.load(directory);
+        assertEquals("user changes",new String(Files.readAllBytes(example.toPath()),StandardCharsets.UTF_8));
+    }
+    @Test public void nativeAccompanimentSeasonsInAnySlotAndAddsTwoServingsWithoutMixing() throws Exception {
+        writeSide("carrot.json",sideExample());CustomSpices.load(directory);
+        CustomSpice side=CustomSpices.find("custom:carrot_side");assertNotNull(side);assertTrue(side.accompaniment());
+        ItemStack carrot=new ItemStack(Items.CARROT);assertEquals(Collections.singletonList(side),Seasoning.ingredient(carrot));
+        assertTrue(Seasoning.components(carrot).isEmpty()); assertEquals(Items.CARROT,Seasoning.material(side).getItem());
+        SeasonFoodRecipe recipe=new SeasonFoodRecipe();ItemStack one=recipe.getCraftingResult(grid(carrot,new ItemStack(Items.APPLE)));
+        assertEquals(Items.APPLE,one.getItem());assertEquals(Collections.singletonList(side),Seasoning.components(one));
+        ItemStack two=recipe.getCraftingResult(grid(carrot,one));assertEquals(Arrays.asList(side,side),Seasoning.components(two));
+        assertFalse(recipe.matches(grid(carrot,two),null));assertFalse(recipe.matches(grid(two,new ItemStack(Items.BREAD)),null));
+        assertFalse(recipe.matches(grid(one,Seasoning.powder(Collections.singletonList(SpiceKind.SALT),1)),null));
+        assertEquals(1.2,Seasoning.flavor(one).diversityMultiplier,0);assertEquals(SpiceConfig.accompanimentMultiplier,Seasoning.flavor(two).diversityMultiplier,0);
+        squeek.applecore.api.food.FoodEvent.GetFoodValues values=new squeek.applecore.api.food.FoodEvent.GetFoodValues(two,new squeek.applecore.api.food.FoodValues(4,.3F));
+        SpiceEffects.foodValues(values);assertEquals(8,values.foodValues.hunger);assertEquals(4.8,values.foodValues.getUnboundedSaturationIncrement(),.001);
+        assertEquals(1200,side.effects(2).get(0).effect.getDuration());assertEquals(0,side.effects(2).get(0).effect.getAmplifier());
+        Map<Potion,PotionEffect> merged=SeasoningPotions.merge(Collections.singletonMap(MobEffects.NIGHT_VISION,new PotionEffect(MobEffects.NIGHT_VISION,300,2)),side.effects(2));
+        assertEquals(1500,merged.get(MobEffects.NIGHT_VISION).getDuration());assertEquals(2,merged.get(MobEffects.NIGHT_VISION).getAmplifier());
+        assertTrue(SpiceRecipes.all().isEmpty());
+        assertTrue(Seasoning.variants(new ItemStack(Items.APPLE)).stream().anyMatch(v->Seasoning.components(v).equals(Arrays.asList(side,side))));
+        assertTrue(Seasoning.effectKinds(Collections.singletonList(SpiceKind.CREATIVE)).contains(side));
+        net.minecraft.util.NonNullList<ItemStack> creative=net.minecraft.util.NonNullList.create();SpiceRegistry.spice.getSubItems(net.minecraft.creativetab.CreativeTabs.FOOD,creative);
+        assertTrue(creative.stream().noneMatch(v->Seasoning.components(v).contains(side)));
+    }
+    @Test public void exactMaterialDataConflictIsolationAndCustomReturnsArePreserved() throws Exception {
+        JsonObject first=sideExample();first.getAsJsonObject("material").addProperty("nbt","{Side:1}");
+        JsonObject returned=new JsonObject();returned.addProperty("item","minecraft:bowl");returned.addProperty("count",2);first.add("return",returned);
+        writeSide("a_valid.json",first);
+        JsonObject duplicate=new JsonParser().parse(first.toString()).getAsJsonObject();duplicate.addProperty("id","custom:duplicate");writeSide("b_duplicate.json",duplicate);
+        JsonObject other=new JsonParser().parse(first.toString()).getAsJsonObject();other.addProperty("id","custom:other");other.getAsJsonObject("material").addProperty("nbt","{Side:2}");other.add("return",JsonNull.INSTANCE);writeSide("c_other.json",other);
+        JsonObject invalid=new JsonParser().parse(first.toString()).getAsJsonObject();invalid.addProperty("id","custom:invalid");invalid.addProperty("hunger",-1);writeSide("d_invalid.json",invalid);
+        CustomSpices.load(directory);assertEquals(2,CustomSpices.all().size());assertNull(CustomSpices.find("custom:duplicate"));assertNull(CustomSpices.find("custom:invalid"));
+        assertTrue(Seasoning.ingredient(new ItemStack(Items.CARROT)).isEmpty());
+        CustomSpice side=CustomSpices.find("custom:carrot_side");ItemStack material=side.material();assertTrue(side.matches(material));
+        InventoryCrafting input=grid(new ItemStack(Items.APPLE),material);assertEquals(2,new SeasonFoodRecipe().getRemainingItems(input).get(1).getCount());
+        assertTrue(new SeasonFoodRecipe().getRemainingItems(grid(new ItemStack(Items.APPLE),CustomSpices.find("custom:other").material())).get(1).isEmpty());
+        material.getTagCompound().setInteger("Side",9);assertFalse(side.matches(material));assertTrue(side.matches(side.material()));
+    }
+    @Test @SuppressWarnings("unchecked") public void snapshotIncludesAccompanimentDefinitionButNoGrindingRecipe() throws Exception {
+        write("herb.json",example());writeSide("carrot.json",sideExample());CustomSpices.load(directory);
+        NBTTagList snapshot=CustomSpices.snapshot();CustomSpices.load(temp.newFolder());CustomSpices.readSnapshot(snapshot);
+        Field server=CustomSpices.class.getDeclaredField("serverDefinitions");server.setAccessible(true);
+        CustomSpice side=((Map<String,CustomSpice>)server.get(null)).get("custom:carrot_side");assertTrue(side.accompaniment());
+        assertEquals(2,side.hungerBonus);assertEquals(1.2,side.saturationBonus,0);assertEquals("Carrot Accompaniment",side.text("en_us","name"));
+        assertEquals(Items.CARROT,side.material().getItem());assertEquals(1200,side.effects(2).get(0).effect.getDuration());
+        Field recipes=CustomSpices.class.getDeclaredField("serverRecipes");recipes.setAccessible(true);assertEquals(1,((List<?>)recipes.get(null)).size());
     }
 }

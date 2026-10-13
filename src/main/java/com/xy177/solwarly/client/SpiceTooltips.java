@@ -22,17 +22,20 @@ import java.util.*;
 public final class SpiceTooltips {
     @SubscribeEvent(priority = EventPriority.LOWEST) public static void tooltip(ItemTooltipEvent event) {
         ItemStack stack = event.getItemStack(); List<SpiceKind> kinds = Seasoning.components(stack);
+        boolean nativeMaterial = kinds.isEmpty();
+        if (nativeMaterial) kinds = Seasoning.ingredient(stack);
         if (kinds.isEmpty()) return;
         boolean powder = stack.getItem() == SpiceRegistry.spice;
-        if (!powder && !Seasoning.seasoned(stack)) return;
         List<String> lines = event.getToolTip();
-        if (!powder) {
+        if (Seasoning.seasoned(stack)) {
             addPotionTooltips(stack, lines);
             if (!lines.isEmpty()) lines.set(0, foodName(lines.get(0), kinds, LocalDate.now()));
         }
+        if (nativeMaterial && Seasoning.accompaniments(kinds)) lines.add(TextFormatting.AQUA + I18n.format("solwarly.spice.accompaniment"));
+        kinds = Seasoning.effectKinds(kinds);
         for (SpiceKind kind : new LinkedHashSet<>(kinds)) {
-            int copies = Collections.frequency(kinds, kind);
-            int color = kinds.size() > 1 ? kind.color() : Seasoning.color(stack);
+            int copies = Math.min(3, Seasoning.copies(kinds, kind));
+            int color = nativeMaterial || kinds.size() > 1 ? kind.color() : Seasoning.color(stack);
             String description;
             if (kind instanceof CustomSpice) {
                 CustomSpice custom = (CustomSpice) kind;
@@ -43,18 +46,18 @@ public final class SpiceTooltips {
                     for (SeasoningPotions.Entry entry : custom.effects(copies)) {
                         PotionEffect effect = entry.effect;
                         String effectName = I18n.format(effect.getEffectName());
-                        if (effect.getAmplifier() > 0) effectName += " " + I18n.format("potion.potency." + effect.getAmplifier());
+                        if (effect.getAmplifier() > 0) effectName += " " + potency(effect.getAmplifier());
                         effects.add(effectName + " (" + Potion.getPotionDurationString(effect, 1.0F) + ")");
                     }
                     if (!effects.isEmpty()) description += ": " + String.join(", ", effects);
                 }
-                if (copies > 1) description += " " + I18n.format("solwarly.spice." + (copies == 3 ? "too_much" : "lots"));
+                if (copies > 1 && !kind.accompaniment()) description += " " + I18n.format("solwarly.spice." + (copies == 3 ? "too_much" : "lots"));
             } else if (kind == SpiceKind.MYSTERY) {
                 description = I18n.format("solwarly.spice.mystery.tooltip",
                     SpiceEffects.mysteryCureCount(copies));
             } else {
                 description = kind.fruit() ? fruitDescription(kind) : I18n.format("solwarly.spice." + kind.id() + ".tooltip");
-                if (copies > 1) description += " " + I18n.format("solwarly.spice." + (copies == 3 ? "too_much" : "lots"));
+                if (copies > 1 && !kind.accompaniment()) description += " " + I18n.format("solwarly.spice." + (copies == 3 ? "too_much" : "lots"));
             }
             for (String line : description.split("\\r?\\n", -1)) lines.add(HexTooltipFont.mark(color, line));
         }
@@ -86,6 +89,7 @@ public final class SpiceTooltips {
             float chance = addedEntry.getValue().chance;
             PotionEffect effect = entry.getValue();
             String name = new TextComponentTranslation(effect.getEffectName()).getFormattedText();
+            if (effect.getAmplifier() > 0) name += TextFormatting.BLUE + " " + potency(effect.getAmplifier());
             String duration = Potion.getPotionDurationString(effect, 1.0F);
             String key = net.minecraftforge.fml.common.Loader.isModLoaded("farmersdelight")
                 ? "farmersdelight.tooltip.food.effect" : "solwarly.tooltip.food.effect";
@@ -176,9 +180,10 @@ public final class SpiceTooltips {
         java.util.regex.Matcher debug = java.util.regex.Pattern.compile("(\\s+(?:§.)*\\(#\\d+(?:/\\d+)?\\).*)$").matcher(original);
         String ending = "";
         if (debug.find()) { ending = debug.group(1); original = original.substring(0, debug.start()); }
+        kinds = Seasoning.effectKinds(kinds);
         List<SpiceKind> unique = new ArrayList<>(new LinkedHashSet<>(kinds));
         for (int i = unique.size() - 1; i >= 0; i--) {
-            SpiceKind kind = unique.get(i); int copies = Collections.frequency(kinds, kind);
+            SpiceKind kind = unique.get(i); int copies = Math.min(3, Seasoning.copies(kinds, kind));
             String id = kind.id();
             if (kind == SpiceKind.HAM && (date.getMonthValue() == 4 && date.getDayOfMonth() == 1
                 || date.getMonthValue() == 11 && date.getDayOfMonth() == 18)) id = "ham_holiday";
@@ -187,7 +192,7 @@ public final class SpiceTooltips {
                 String prefix = custom.text("prefix").trim(), suffix = custom.text("suffix").trim();
                 original = (prefix.isEmpty() ? "" : prefix + " ") + original + (suffix.isEmpty() ? "" : " " + suffix);
             } else original = I18n.format("solwarly.seasoning." + id, original);
-            if (copies > 1) original = I18n.format("solwarly.seasoning." + (copies == 3 ? "extreme" : "super"), original);
+            if (copies > 1 && !kind.accompaniment()) original = I18n.format("solwarly.seasoning." + (copies == 3 ? "extreme" : "super"), original);
         }
         return original + ending;
     }
@@ -197,6 +202,14 @@ public final class SpiceTooltips {
             net.minecraft.client.gui.FontRenderer original = event.getFontRenderer();
             event.setFontRenderer(fonts.computeIfAbsent(original, HexTooltipFont::new)); break;
         }
+    }
+    private static String potency(int amplifier) {
+        String key="potion.potency."+amplifier, text=I18n.format(key);
+        if (!text.equals(key)) return text;
+        int level=amplifier+1; StringBuilder roman=new StringBuilder();
+        int[] values={100,90,50,40,10,9,5,4,1}; String[] symbols={"C","XC","L","XL","X","IX","V","IV","I"};
+        for(int i=0;i<values.length;i++)while(level>=values[i]) {roman.append(symbols[i]);level-=values[i];}
+        return roman.toString();
     }
     private SpiceTooltips() {}
 }

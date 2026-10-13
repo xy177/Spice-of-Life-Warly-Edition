@@ -11,12 +11,31 @@ import java.util.*;
 public final class CustomSpice extends SpiceKind {
     final JsonObject definition;
     private final SortedMap<String, Map<String, String>> translations = new TreeMap<>();
-    private final List<List<SeasoningPotions.Entry>> effects = new ArrayList<>();
+    private final Map<Integer, List<SeasoningPotions.Entry>> effects = new TreeMap<>();
 
-    public CustomSpice(JsonObject json) {
+    private final net.minecraft.item.ItemStack material, returned;
+    public final int hungerBonus;
+    public final double saturationBonus;
+
+    public CustomSpice(JsonObject json) { this(json, false); }
+    public CustomSpice(JsonObject json, boolean accompaniment) {
         super(required(json, "id"), color(json), multiplier(json));
         if (!id().matches("[a-z0-9_.-]+:[a-z0-9_./-]+")) throw new IllegalArgumentException("id must be namespace:path");
         definition = new JsonParser().parse(json.toString()).getAsJsonObject();
+        if (accompaniment && (json.getAsJsonObject("material").has("components")
+            || json.has("return") && !json.get("return").isJsonNull() && json.getAsJsonObject("return").has("components")))
+            throw new IllegalArgumentException("components requires Minecraft 1.21; use nbt for this version");
+        material = accompaniment ? CustomSpices.stack(json.getAsJsonObject("material")) : net.minecraft.item.ItemStack.EMPTY;
+        if (accompaniment && (material.getCount() != 1 || material.getItem() == SpiceRegistry.spice || Seasoning.seasoned(material)))
+            throw new IllegalArgumentException("Accompaniment material must be one unseasoned native item");
+        returned = !accompaniment ? net.minecraft.item.ItemStack.EMPTY : json.has("return")
+            ? (json.get("return").isJsonNull() ? net.minecraft.item.ItemStack.EMPTY : CustomSpices.stack(json.getAsJsonObject("return")))
+            : CustomSpices.container(material);
+        hungerBonus = accompaniment ? integer(json, "hunger", 0, Integer.MAX_VALUE / 4) : 0;
+        saturationBonus = accompaniment ? number(json, "saturation") : 0;
+        if (!Double.isFinite(saturationBonus) || saturationBonus < 0 || saturationBonus > Float.MAX_VALUE / 4)
+            throw new IllegalArgumentException("saturation must be a finite nonnegative actual saturation amount");
+        definition.addProperty("_accompaniment", accompaniment);
         JsonObject languages = json.getAsJsonObject("translations");
         if (languages == null || languages.entrySet().isEmpty()) throw new IllegalArgumentException("translations must contain a language and name");
         for (Map.Entry<String, JsonElement> language : languages.entrySet()) {
@@ -30,10 +49,15 @@ public final class CustomSpice extends SpiceKind {
             values.put("tooltip", text.has("tooltip") ? text.get("tooltip").getAsString() : "");
             translations.put(language.getKey(), values);
         }
-        JsonObject tiers = json.getAsJsonObject("effects");
-        if (tiers == null) throw new IllegalArgumentException("effects must define arrays for 1, 2 and 3 copies");
-        for (int copies = 1; copies <= 3; copies++) {
-            JsonArray specs = tiers.getAsJsonArray(Integer.toString(copies));
+        JsonObject tiers = accompaniment ? null : json.getAsJsonObject("effects");
+        if (!accompaniment && tiers == null) throw new IllegalArgumentException("effects must define arrays for 1, 2 and 3 copies");
+        Set<Integer> counts = new TreeSet<>(Arrays.asList(1, 2, 3));
+        if (!accompaniment) for (String key : tiers.entrySet().stream().map(Map.Entry::getKey).collect(java.util.stream.Collectors.toList())) {
+            if (!key.matches("[1-9][0-9]*")) throw new IllegalArgumentException("Effect tier must be a positive integer: " + key);
+            try { counts.add(Integer.parseInt(key)); } catch (NumberFormatException invalid) { throw new IllegalArgumentException("Effect tier exceeds the integer range: " + key); }
+        }
+        for (int copies : counts) {
+            JsonArray specs = accompaniment ? json.getAsJsonArray("effects") : tiers.getAsJsonArray(Integer.toString(copies));
             if (specs == null) throw new IllegalArgumentException("Missing effects for " + copies + " copies (use [] for no effects)");
             List<SeasoningPotions.Entry> entries = new ArrayList<>(); Set<Potion> seen = new HashSet<>();
             for (JsonElement element : specs) {
@@ -43,19 +67,32 @@ public final class CustomSpice extends SpiceKind {
                 if (!seen.add(potion)) throw new IllegalArgumentException("Duplicate potion within the same copy tier: " + potion.getRegistryName());
                 int level = integer(spec, "level", 1, 256);
                 double seconds = number(spec, "duration_seconds");
-                if (!Double.isFinite(seconds) || seconds < .05 || seconds > Integer.MAX_VALUE / 20.0)
+                if (!Double.isFinite(seconds) || seconds < .05 || seconds > Integer.MAX_VALUE / (20.0 * (accompaniment ? copies : 1)))
                     throw new IllegalArgumentException("duration_seconds must be positive and within the tick range");
-                entries.add(new SeasoningPotions.Entry(new PotionEffect(potion, (int) Math.round(seconds * 20), level - 1), 1));
+                entries.add(new SeasoningPotions.Entry(new PotionEffect(potion, (int) Math.round(seconds * 20 * (accompaniment ? copies : 1)), Seasoning.amplifier(level - 1L)), 1));
             }
-            effects.add(Collections.unmodifiableList(entries));
+            effects.put(copies, Collections.unmodifiableList(entries));
         }
     }
-    public List<SeasoningPotions.Entry> effects(int copies) {
+    public List<SeasoningPotions.Entry> effects(int copies) { return effects((long) copies); }
+    public List<SeasoningPotions.Entry> effects(long copies) {
+        copies = Math.max(1, copies);
+        boolean side = accompaniment(), exact = !side && copies <= Integer.MAX_VALUE && effects.containsKey((int) copies);
         List<SeasoningPotions.Entry> result = new ArrayList<>();
-        for (SeasoningPotions.Entry entry : effects.get(Math.max(1, Math.min(3, copies)) - 1))
-            result.add(new SeasoningPotions.Entry(new PotionEffect(entry.effect), entry.chance));
+        for (SeasoningPotions.Entry entry : effects.get(side ? 1 : exact ? (int) copies : 3)) {
+            PotionEffect effect = entry.effect;
+            boolean scaling = !side && !exact && SeasoningPotions.scales(effect.getPotion());
+            double scale = side ? copies : exact ? 1 : Seasoning.durationScale(copies) / Math.max(.000001, Seasoning.durationScale(3));
+            result.add(new SeasoningPotions.Entry(new PotionEffect(effect.getPotion(),
+                Seasoning.ticks(effect.getDuration() * (scaling ? 1 : scale)),
+                Seasoning.amplifier((long) effect.getAmplifier() + (scaling ? copies - 3L : 0))), entry.chance));
+        }
         return result;
     }
+    @Override public boolean accompaniment() { return !material.isEmpty(); }
+    public net.minecraft.item.ItemStack material() { return material.copy(); }
+    public net.minecraft.item.ItemStack returned() { return returned.copy(); }
+    public boolean matches(net.minecraft.item.ItemStack stack) { return accompaniment() && SpiceRecipe.same(material, stack); }
     @Override public boolean available() { return true; }
     public String text(String field) {
         String language = FMLCommonHandler.instance().getSide().isClient()

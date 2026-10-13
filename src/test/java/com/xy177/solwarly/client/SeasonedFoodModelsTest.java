@@ -46,4 +46,25 @@ public class SeasonedFoodModelsTest {
         assertEquals(.7f, front[0], .0001f);
         assertArrayEquals(new float[]{1, 1, 1, 1}, attribute(food, 0, 1), .004f);
     }
+    @Test public void grinderDirectionalShadeTracksFacingAndAnimatedTilt() {
+        javax.vecmath.Vector3f normal=new javax.vecmath.Vector3f(0,0,1);
+        assertEquals(.8F,SpiceGrinderRenderer.shade(normal),.001F);
+        SpiceGrinderRenderer.orientation(90,0).transform(normal); assertEquals(.6F,SpiceGrinderRenderer.shade(normal),.001F);
+        normal.set(0,1,0); SpiceGrinderRenderer.orientation(0,180).transform(normal); assertEquals(.5F,SpiceGrinderRenderer.shade(normal),.001F);
+    }
+    @Test public void itemMeshWithoutLightmapCanBeRenderedAsLitBlock() {
+        UnpackedBakedQuad.Builder block = new UnpackedBakedQuad.Builder(DefaultVertexFormats.BLOCK);
+        quad().pipe(SpiceGrinderRenderer.litConsumer(block, .6F, (240 << 16) | 144));
+        BakedQuad lit = block.build();
+        float[] color = attribute(lit, 0, 1);
+        assertEquals(.6F, color[0], .004F); assertEquals(1F, color[3], .004F);
+        int uv = lit.getFormat().getUvOffsetById(1) / 4;
+        int packedLight = lit.getVertexData()[uv];
+        assertEquals(144, packedLight & 65535); assertEquals(240, packedLight >>> 16);
+    }
+    @Test public void secondAccompanimentBadgeOccupiesOtherBottomQuarter() {
+        BakedQuad badge = SeasonedFoodModels.transform(quad(), null, true, 0xFFFFFF, new float[]{.8F}, .5F);
+        assertArrayEquals(new float[]{.5F, 0, .8F}, java.util.Arrays.copyOf(attribute(badge, 0, 0), 3), .0001F);
+        assertArrayEquals(new float[]{1F, .5F, .8F}, java.util.Arrays.copyOf(attribute(badge, 2, 0), 3), .0001F);
+    }
 }
