@@ -1,63 +1,56 @@
-// Prepared by xy177 on 2026-10-10 for Spice of Life Warly Edition (LGPL 2.1).
-buildscript {
-    repositories {
-        maven { url = 'https://maven.minecraftforge.net' }
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
-    }
+plugins {
+    id 'java-library'
+    id 'net.minecraftforge.gradle' version '6.0.54'
+    id 'org.spongepowered.mixin' version '0.7-SNAPSHOT'
 }
-
-apply plugin: 'net.minecraftforge.gradle.forge'
-
 group = 'com.xy177.solwarly'
 version = '1.0.0'
-archivesBaseName = 'solwarly-1.12.2'
-sourceCompatibility = targetCompatibility = '1.8'
-
-tasks.withType(JavaCompile) {
-    options.encoding = 'UTF-8'
-}
-
+base { archivesName = 'solwarly-1.20.1' }
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 minecraft {
-    version = '1.12.2-14.23.5.2836'
-    mappings = 'stable_39'
-    runDir = 'run'
+    mappings channel: 'official', version: '1.20.1'
+    copyIdeResources = true
+    runs {
+        configureEach {
+            workingDirectory file("${providers.gradleProperty('runDirectory').getOrElse('E:/BOX/solwarly-runs/1.20.1')}/${name}")
+            property 'forge.logging.console.level', 'info'
+            mods { solwarly { source sourceSets.main } }
+        }
+        client {}
+        server { args '--nogui' }
+    }
 }
-
 repositories {
     mavenCentral()
-    maven { url = 'https://www.ryanliptak.com/maven/' }
     maven { url = 'https://maven.blamejared.com' }
+    maven { url = 'https://api.modrinth.com/maven'; content { includeGroup 'maven.modrinth' } }
+    maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
 }
-
 dependencies {
-    deobfCompile 'applecore:AppleCore:1.12.2-3.2.0:deobf'
-    deobfProvided 'mezz.jei:jei_1.12.2:4.16.1.1013:api'
+    minecraft 'net.minecraftforge:forge:1.20.1-47.2.0'
+    compileOnly fg.deobf('maven.modrinth:u6dRKJwZ:4vbuxppk')
+    compileOnly fg.deobf('maven.modrinth:emi:Axuu9I9R')
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
+    if (project.hasProperty('withCompat')) {
+        runtimeOnly fg.deobf('maven.modrinth:R2OftAxM:SiIpcZzM')
+        runtimeOnly fg.deobf('maven.modrinth:u6dRKJwZ:4vbuxppk')
+    }
 }
-
-processResources {
+mixin {
+    add sourceSets.main, 'solwarly.refmap.json'
+    config 'solwarly.mixins.json'
+}
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.compilerArgs += ['-Xmaxerrs', '500']
+}
+tasks.named('processResources').configure {
     inputs.property 'version', project.version
-    from(sourceSets.main.resources.srcDirs) {
-        include 'mcmod.info'
-        expand 'version': project.version
-    }
-    from(sourceSets.main.resources.srcDirs) {
-        exclude 'mcmod.info'
-    }
+    filesMatching('META-INF/mods.toml') { expand version: project.version }
 }
-
-jar {
-    from('LICENSE.txt')
-    manifest {
-        attributes 'Implementation-Title': 'Spice of Life Warly Edition',
-                   'Implementation-Version': project.version,
-                   'Implementation-Vendor': 'xy177'
-    }
-}
-
-sourceJar {
+tasks.named('jar').configure {
     from 'LICENSE.txt'
+    manifest { attributes 'Implementation-Vendor': 'xy177', 'MixinConfigs': 'solwarly.mixins.json' }
+    finalizedBy 'reobfJar'
 }

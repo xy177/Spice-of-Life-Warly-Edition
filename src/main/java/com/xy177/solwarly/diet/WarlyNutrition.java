@@ -1,36 +1,31 @@
 package com.xy177.solwarly.diet;
 
-import net.minecraft.util.FoodStats;
-import squeek.applecore.api.food.FoodEvent;
-import squeek.applecore.api.food.FoodValues;
+import com.xy177.solwarly.spice.*;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 
-/** Scale actual saturation independently of rounded integer hunger. */
 public final class WarlyNutrition {
-    public static FoodValues scale(FoodValues values, double multiplier) {
-        if (multiplier == 1) return values;
-        int hunger = Math.max(0, (int) Math.round(values.hunger * multiplier));
-        float saturation = (float) (values.getUnboundedSaturationIncrement() * multiplier);
-        return hunger > 0 ? new FoodValues(hunger, saturation / (2 * hunger)) : new ZeroHungerValues(saturation);
-    }
-
-    public static void restoreZeroHungerSaturation(FoodEvent.FoodEaten event) {
-        if (!(event.foodValues instanceof ZeroHungerValues) || event.player.world.isRemote) return;
-        ZeroHungerValues values = (ZeroHungerValues) event.foodValues;
-        FoodStats stats = event.player.getFoodStats();
-        float before = stats.getSaturationLevel();
-        stats.setFoodSaturationLevel(Math.min(stats.getFoodLevel(), before + values.saturation));
-        values.restored = stats.getSaturationLevel() - before;
-    }
-
-    public static float saturationAdded(FoodEvent.FoodEaten event) {
-        return event.saturationAdded + (event.foodValues instanceof ZeroHungerValues ? ((ZeroHungerValues) event.foodValues).restored : 0);
-    }
-
-    private static final class ZeroHungerValues extends FoodValues {
-        final float saturation;
-        float restored;
-        ZeroHungerValues(float saturation) { super(0, 0); this.saturation = saturation; }
-        @Override public float getUnboundedSaturationIncrement() { return saturation; }
+    public record Values(int hunger,float saturation) {}
+    public static Values values(Player player,ItemStack food) {
+        var properties=food.getFoodProperties(player);
+        if(properties==null)return new Values(0,0);
+        double hunger=properties.getNutrition(),saturation=hunger*properties.getSaturationModifier()*2;
+        var kinds = Seasoning.effectKinds(Seasoning.components(food));
+        for (SpiceKind kind : new java.util.LinkedHashSet<>(kinds)) {
+            long copies = Seasoning.amount(kinds, kind);
+            if (kind instanceof CustomSpice && kind.accompaniment()) {
+                hunger += ((CustomSpice) kind).hungerBonus * copies; saturation += ((CustomSpice) kind).saturationBonus * copies;
+            }
+            if (kind == SpiceKind.RICE) { hunger += SpiceConfig.riceHunger * copies; saturation += SpiceConfig.riceSaturation * copies; }
+            if (kind == SpiceKind.TRAVARICE) { hunger += ImmortalSpices.travariceHunger * copies; saturation += ImmortalSpices.travariceSaturation * copies; }
+        }
+        var appetizing=player.getEffect(SpiceRegistry.appetizing);
+        if(appetizing!=null) {
+            double scale=1+SpiceConfig.appetiteBase+SpiceConfig.appetitePerLevel*(appetizing.getAmplifier()+1);
+            hunger=Math.round(hunger*scale);saturation*=scale;
+        }
+        double repeat=DietRuntime.warlyMultiplier(player,food);
+        return new Values(Seasoning.ticks(hunger*repeat),(float)Math.min(Float.MAX_VALUE,saturation*repeat));
     }
     private WarlyNutrition() {}
 }

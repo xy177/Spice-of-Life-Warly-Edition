@@ -1,0 +1,10 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.xy177.solwarly.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "solwarly.refmap.json",
+  "mixins": ["FoodDataMixin", "ItemStackMixin", "ServerLevelMixin", "FarmerPieMixin"],
+  "client": ["GuiGraphicsMixin"],
+  "injectors": { "defaultRequire": 1 }
+}

@@ -1,0 +1,42 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="LGPL-2.1"
+
+[[mods]]
+modId="solwarly"
+version="${version}"
+displayName="Spice of Life Warly Edition"
+authors="xy177"
+displayURL="https://github.com/xy177/Spice-of-Life-Warly-Edition"
+logoFile="assets/solwarly/textures/forge/logo.png"
+credits='''Based on Spice of Life:Carrot Edition
+https://github.com/Cazsius/Spice-of-Life-Carrot-Edition'''
+description="Combines Carrot Edition’s lasting progression with Apple Pie Edition’s dietary diversity. Discover new foods and flavors to build Food Experience, vary your meals for diversity rewards, and grind spices to add flavor and effects to your food."
+
+[[dependencies.solwarly]]
+modId="forge"
+mandatory=true
+versionRange="[47.2.0,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.solwarly]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.20.1,1.20.2)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.solwarly]]
+modId="emi"
+mandatory=false
+versionRange="[1.1.24,)"
+ordering="AFTER"
+side="CLIENT"
+
+[[mods]]
+modId="solcarrot"
+version="1.15.1"
+displayName="Warly Edition: Carrot Compatibility"
+authors="xy177"
+description="Carrot Edition identity and save compatibility."

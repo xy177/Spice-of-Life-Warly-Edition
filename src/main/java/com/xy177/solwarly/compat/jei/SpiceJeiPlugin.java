@@ -1,187 +1,180 @@
 package com.xy177.solwarly.compat.jei;
 
-import com.xy177.solwarly.block.BlockSpiceGrinder;
 import com.xy177.solwarly.spice.*;
+import com.xy177.solwarly.lunch.*;
 import mezz.jei.api.*;
-import mezz.jei.api.gui.*;
-import mezz.jei.api.ingredients.*;
+import mezz.jei.api.constants.*;
+import mezz.jei.api.gui.builder.*;
+import mezz.jei.api.gui.drawable.IDrawable;
+import mezz.jei.api.gui.ingredient.*;
+import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.recipe.*;
-import mezz.jei.api.recipe.wrapper.ICustomCraftingRecipeWrapper;
+import mezz.jei.api.recipe.RecipeType;
+import mezz.jei.api.recipe.category.IRecipeCategory;
+import mezz.jei.api.recipe.category.extensions.vanilla.crafting.ICraftingCategoryExtension;
+import mezz.jei.api.registration.*;
+import mezz.jei.api.runtime.IJeiRuntime;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.item.ItemStack;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.*;
+import net.minecraft.world.item.crafting.*;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import java.util.*;
 
-@JEIPlugin
+@JeiPlugin
 public final class SpiceJeiPlugin implements IModPlugin {
-    private static final String GRINDING = "solwarly:grinding";
+    private static final RecipeType<SpiceRecipe> GRINDING=RecipeType.create("solwarly","grinding",SpiceRecipe.class);
     private IJeiRuntime runtime;
-    private IIngredientRegistry ingredients;
-    private final List<Wrapper> grinding = new ArrayList<>();
-    private MixingWrapper mixing;
-    private List<ItemStack> customItems = Collections.emptyList();
-    @Override public void registerItemSubtypes(ISubtypeRegistry registry) {
-        registry.useNbtForSubtypes(SpiceRegistry.spice);
+    private List<SpiceRecipe> grinding=List.of();
+    private List<ItemStack> variants=List.of();
+    private MixedSpiceRecipe mixing;
+    @Override public ResourceLocation getPluginUid() { return new ResourceLocation("solwarly","spices"); }
+    @Override public void registerItemSubtypes(ISubtypeRegistration registration) { registration.registerSubtypeInterpreter(SpiceRegistry.spice,(stack,context)->Seasoning.mixed(stack)?"mixed":ItemSpice.flavor(stack)); }
+    @Override public void registerCategories(IRecipeCategoryRegistration registration) { registration.addRecipeCategories(new GrindingCategory(registration.getJeiHelpers().getGuiHelper())); }
+    @Override public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) { registration.addRecipeCatalyst(new ItemStack(SpiceRegistry.GRINDER.get()),GRINDING); }
+    @Override public void registerExtraIngredients(IExtraIngredientRegistration registration) {
+        variants=powders();if(!variants.isEmpty())registration.addExtraItemStacks(variants);
     }
-    @Override public void registerCategories(IRecipeCategoryRegistration registry) {
-        IGuiHelper gui = registry.getJeiHelpers().getGuiHelper();
-        registry.addRecipeCategories(new Category(gui));
+    @Override public void registerVanillaCategoryExtensions(IVanillaCategoryExtensionRegistration registration) {
+        registration.getCraftingCategory().addCategoryExtension(MixedSpiceRecipe.class,recipe->new MixingExtension());
+        registration.getCraftingCategory().addCategoryExtension(LunchUpgradeRecipe.class,recipe->new UpgradeExtension());
     }
-    @Override public void register(IModRegistry registry) {
-        ingredients = registry.getIngredientRegistry();
-        updateRecipes();
-        registry.addRecipes(grinding, GRINDING);
-        registry.addRecipeCatalyst(new ItemStack(BlockSpiceGrinder.INSTANCE), GRINDING);
-        if (mixing != null) registry.addRecipes(Collections.singletonList(mixing), VanillaRecipeCategoryUid.CRAFTING);
-        customItems = customItems();
+    @Override public void registerRecipes(IRecipeRegistration registration) {
+        grinding=grinding();registration.addRecipes(GRINDING,grinding);
     }
-    private void updateRecipes() {
-        grinding.clear();
-        for (SpiceRecipe recipe : SpiceRecipes.all()) if (!CustomSpices.owns(recipe)) grinding.add(Wrapper.grinding(recipe));
-        for (SpiceRecipe recipe : CustomSpices.displayRecipes()) grinding.add(Wrapper.grinding(recipe));
-        List<SpiceKind> powders = new ArrayList<>();
-        for (SpiceKind kind : SpiceKind.all()) if (kind != SpiceKind.RICE && kind.available()) powders.add(kind);
-        mixing = powders.isEmpty() || SpiceConfig.mixedCatalyst().isEmpty() ? null : new MixingWrapper(powders);
+    private static List<SpiceRecipe> grinding() {
+        List<SpiceRecipe> result=new ArrayList<>();
+        for(var recipe:SpiceRecipes.all())if(!CustomSpices.owns(recipe))result.add(recipe);
+        result.addAll(CustomSpices.displayRecipes());return result;
     }
-    private List<ItemStack> customItems() {
-        List<ItemStack> result = new ArrayList<>();
-        for (CustomSpice spice : CustomSpices.all()) result.add(Seasoning.powder(Collections.singletonList(spice), 1));
-        return result;
+    private static List<ItemStack> powders() {
+        return SpiceKind.all().stream().filter(kind->!kind.accompaniment()&&kind.available()).map(kind->Seasoning.material(kind)).toList();
     }
-    @Override public void onRuntimeAvailable(IJeiRuntime runtime) {
-        this.runtime = runtime;
-        net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(this);
-    }
-    @net.minecraftforge.fml.common.eventhandler.SubscribeEvent
-    public void customDefinitionsChanged(CustomSpices.DefinitionsChanged event) {
-        refreshRecipes();
-    }
-    @net.minecraftforge.fml.common.eventhandler.SubscribeEvent
-    public void mixingRecipeChanged(SpiceConfig.MixingRecipeChanged event) {
-        refreshRecipes();
-    }
-    private void refreshRecipes() {
-        if (runtime == null) return;
-        IRecipeRegistry recipes = runtime.getRecipeRegistry();
-        for (Wrapper wrapper : grinding) recipes.removeRecipe(wrapper, GRINDING);
-        if (mixing != null) recipes.removeRecipe(mixing, VanillaRecipeCategoryUid.CRAFTING);
-        if (!customItems.isEmpty()) ingredients.removeIngredientsAtRuntime(VanillaTypes.ITEM, customItems);
-        updateRecipes(); customItems = customItems();
-        if (!customItems.isEmpty()) ingredients.addIngredientsAtRuntime(VanillaTypes.ITEM, customItems);
-        for (Wrapper wrapper : grinding) recipes.addRecipe(wrapper, GRINDING);
-        if (mixing != null) recipes.addRecipe(mixing, VanillaRecipeCategoryUid.CRAFTING);
-    }
-    public static final class Wrapper implements IRecipeWrapper {
-        final List<ItemStack> inputs, outputs;
-        Wrapper(List<ItemStack> inputs, List<ItemStack> outputs) { this.inputs = inputs; this.outputs = outputs; }
-        static Wrapper grinding(SpiceRecipe recipe) {
-            ItemStack input = recipe.input.copy(); input.setCount(recipe.inputCount);
-            List<ItemStack> outputs = new ArrayList<>(); outputs.add(recipe.result());
-            if (!recipe.returnedContainers().isEmpty()) outputs.add(recipe.returnedContainers());
-            return new Wrapper(Collections.singletonList(input), outputs);
-        }
-        @Override public void getIngredients(IIngredients ingredients) {
-            ingredients.setInputs(VanillaTypes.ITEM, inputs); ingredients.setOutputs(VanillaTypes.ITEM, outputs);
-        }
-    }
-    static final class MixingWrapper implements ICustomCraftingRecipeWrapper {
-        private static final int[] INPUT_SLOTS = {1, 2, 4};
-        final List<List<ItemStack>> inputLists = Arrays.asList(new ArrayList<>(), new ArrayList<>(), new ArrayList<>(),
-            Collections.singletonList(SpiceConfig.mixedCatalyst()));
-        private final boolean consumesCatalyst = SpiceConfig.consumeMixedCatalyst;
-        final List<ItemStack> outputs = new ArrayList<>();
-        private final List<Integer> displayedRecipes = new ArrayList<>();
-        private final Random random;
-        private IGuiItemStackGroup stacks;
-        private long lastUpdate = -1, elapsed;
-        private long displayedStep = -1;
-
-        MixingWrapper(List<SpiceKind> powders) {
-            this(powders, new Random());
-        }
-        MixingWrapper(List<SpiceKind> powders, Random random) {
-            this.random = random;
-            for (int a = 0; a < powders.size(); a++) for (int b = a; b < powders.size(); b++) for (int c = b; c < powders.size(); c++) {
-                List<SpiceKind> kinds = Arrays.asList(powders.get(a), powders.get(b), powders.get(c));
-                for (int i = 0; i < 3; i++) inputLists.get(i).add(Seasoning.powder(Collections.singletonList(kinds.get(i)), 1));
-                outputs.add(Seasoning.powder(kinds, SpiceConfig.mixedCount));
+    @Override public void onRuntimeAvailable(IJeiRuntime runtime) { this.runtime=runtime;net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(this);refresh(); }
+    @Override public void onRuntimeUnavailable() { net.minecraftforge.common.MinecraftForge.EVENT_BUS.unregister(this);runtime=null; }
+    @SubscribeEvent public void changed(CustomSpices.DefinitionsChanged event) { refresh(); }
+    @SubscribeEvent public void changed(SpiceConfig.MixingRecipeChanged event) { refresh(); }
+    private void refresh() {
+        if(runtime==null)return;
+        Minecraft.getInstance().execute(()-> {
+            if(runtime==null)return;
+            var manager=runtime.getRecipeManager();manager.hideRecipes(GRINDING,grinding);
+            var level=Minecraft.getInstance().level;
+            if(level!=null) {
+                var actual=level.getRecipeManager().getAllRecipesFor(net.minecraft.world.item.crafting.RecipeType.CRAFTING).stream().filter(recipe->recipe instanceof MixedSpiceRecipe).toList();
+                if(!actual.isEmpty())manager.hideRecipes(RecipeTypes.CRAFTING,actual);
             }
-        }
-        @Override public void getIngredients(IIngredients ingredients) {
-            ingredients.setInputLists(VanillaTypes.ITEM, inputLists);
-            ingredients.setOutputLists(VanillaTypes.ITEM, Collections.singletonList(outputs));
-        }
-        @Override public void setRecipe(IRecipeLayout layout, IIngredients ingredients) {
-            stacks = layout.getItemStacks();
-            // Select complete recipes before clearing JEI's per-slot focus filtering.
-            IFocus<?> focus = layout.getFocus();
-            displayedRecipes.clear();
-            for (int i = 0; i < outputs.size(); i++) if (matchesFocus(i, focus)) displayedRecipes.add(i);
-            if (displayedRecipes.isEmpty()) for (int i = 0; i < outputs.size(); i++) displayedRecipes.add(i);
-            stacks.setOverrideDisplayFocus(null);
-            stacks.set(5, inputLists.get(3).get(0));
-            stacks.addTooltipCallback((slotIndex, input, ingredient, tooltip) -> {
-                if (input && slotIndex == 5 && !consumesCatalyst) tooltip.add(I18n.format("solwarly.jei.not_consumed"));
-            });
-            layout.setShapeless();
-            lastUpdate = -1; elapsed = 0; displayedStep = -1;
-            updateDisplay(0, false);
-            lastUpdate = -1;
-        }
-        private boolean matchesFocus(int index, IFocus<?> focus) {
-            if (focus == null || !(focus.getValue() instanceof ItemStack)) return true;
-            ItemStack value = (ItemStack) focus.getValue();
-            if (focus.getMode() == IFocus.Mode.OUTPUT) return same(outputs.get(index), value);
-            if (ItemStack.areItemsEqual(value, inputLists.get(3).get(0))) return true;
-            for (int i = 0; i < 3; i++) if (same(inputLists.get(i).get(index), value)) return true;
-            return false;
-        }
-        private static boolean same(ItemStack first, ItemStack second) {
-            return ItemStack.areItemsEqual(first, second) && ItemStack.areItemStackTagsEqual(first, second);
-        }
-        void updateDisplay(long time, boolean paused) {
-            if (stacks == null || displayedRecipes.isEmpty()) return;
-            if (lastUpdate >= 0 && !paused) elapsed += Math.max(0, time - lastUpdate);
-            lastUpdate = time;
-            long step = elapsed / 1000;
-            if (step == displayedStep) return;
-            displayedStep = step;
-            int frame = (int) (step % displayedRecipes.size());
-            if (frame == 0) Collections.shuffle(displayedRecipes, random);
-            int index = displayedRecipes.get(frame);
-            // Set single stacks together: JEI truncates/filter-cycles lists independently.
-            for (int i = 0; i < 3; i++) stacks.set(INPUT_SLOTS[i], inputLists.get(i).get(index));
-            stacks.set(0, outputs.get(index));
-        }
-        @Override public void drawInfo(Minecraft mc, int width, int height, int mouseX, int mouseY) {
-            updateDisplay(System.nanoTime() / 1000000, GuiScreen.isShiftKeyDown());
-        }
+            if(mixing!=null)manager.hideRecipes(RecipeTypes.CRAFTING,List.of(mixing));
+            if(!variants.isEmpty())runtime.getIngredientManager().removeIngredientsAtRuntime(VanillaTypes.ITEM_STACK,variants);
+            variants=powders();if(!variants.isEmpty())runtime.getIngredientManager().addIngredientsAtRuntime(VanillaTypes.ITEM_STACK,variants);
+            grinding=grinding();manager.addRecipes(GRINDING,grinding);manager.unhideRecipes(GRINDING,grinding);
+            mixing=null;if(!variants.isEmpty()&&!SpiceConfig.mixedCatalyst().isEmpty()) {
+                mixing=new MixedSpiceRecipe(new ResourceLocation("solwarly","jei_mixing"),CraftingBookCategory.MISC);
+                manager.addRecipes(RecipeTypes.CRAFTING,List.of(mixing));
+            }
+        });
     }
-    private static final class Category implements IRecipeCategory<Wrapper> {
-        final IDrawable background, icon, slot, arrow;
-        Category(IGuiHelper gui) {
-            background = gui.createBlankDrawable(150, 54); slot = gui.getSlotDrawable();
-            icon = gui.createDrawableIngredient(new ItemStack(BlockSpiceGrinder.INSTANCE));
-            arrow = gui.createDrawable(new net.minecraft.util.ResourceLocation("textures/gui/container/furnace.png"), 79, 34, 24, 17);
+    private static final class GrindingCategory implements IRecipeCategory<SpiceRecipe> {
+        final IDrawable background,icon,arrow;
+        GrindingCategory(IGuiHelper gui) {
+            background=gui.createBlankDrawable(150,46);icon=gui.createDrawableItemStack(new ItemStack(SpiceRegistry.GRINDER.get()));
+            arrow=gui.createDrawable(new ResourceLocation("minecraft","textures/gui/container/furnace.png"),79,34,24,17);
         }
-        @Override public String getUid() { return GRINDING; }
-        @Override public String getTitle() { return I18n.format("tile.solwarly.spice_grinder.name"); }
-        @Override public String getModName() { return "Spice of Life Warly Edition"; }
+        @Override public RecipeType<SpiceRecipe> getRecipeType() { return GRINDING; }
+        @Override public Component getTitle() { return Component.translatable("block.solwarly.spice_grinder"); }
         @Override public IDrawable getBackground() { return background; }
         @Override public IDrawable getIcon() { return icon; }
-        @Override public void drawExtras(Minecraft mc) {
-            slot.draw(mc, 23, 9);
-            arrow.draw(mc, 57, 10); slot.draw(mc, 94, 9); slot.draw(mc, 123, 9);
+        private int inputX(SpiceRecipe recipe) {
+            int count = (recipe.dual() ? 2 : 1) + 1 + (recipe.returnedContainers().isEmpty() ? 0 : 1) + (recipe.secondReturnedContainers().isEmpty() ? 0 : 1);
+            return (150 - (count * 22 + 28)) / 2;
         }
-        @Override public void setRecipe(IRecipeLayout layout, Wrapper recipe, IIngredients ingredients) {
-            IGuiItemStackGroup stacks = layout.getItemStacks();
-            for (int i = 0; i < recipe.inputs.size(); i++) {
-                stacks.init(i, true, 23, 9); stacks.set(i, recipe.inputs.get(i));
+        @Override public void draw(SpiceRecipe recipe,IRecipeSlotsView slots,GuiGraphics graphics,double x,double y) { arrow.draw(graphics,inputX(recipe)+(recipe.dual()?2:1)*22+2,15); }
+        @Override public void setRecipe(IRecipeLayoutBuilder builder,SpiceRecipe recipe,IFocusGroup focuses) {
+            ItemStack input=recipe.input.copy();input.setCount(recipe.inputCount);
+            int x=inputX(recipe);
+            builder.addInputSlot(x+1,15).setStandardSlotBackground().addItemStack(input);
+            if (recipe.dual()) builder.addInputSlot(x+23,15).setStandardSlotBackground().addItemStack(recipe.secondInput.copyWithCount(recipe.secondCount));
+            int outputX = x + (recipe.dual()?2:1)*22 + 33;
+            builder.addOutputSlot(outputX,15).setStandardSlotBackground().addItemStack(recipe.result());
+            var containers=List.of(recipe.returnedContainers(),recipe.secondReturnedContainers()).stream().filter(stack->!stack.isEmpty()).toList();
+            for(int i=0;i<containers.size();i++)builder.addOutputSlot(outputX+(i+1)*22,15).setStandardSlotBackground().addItemStack(containers.get(i));
+        }
+    }
+    /** One workbench entry, with whole recipes randomly chosen and displayed together. */
+    private static final class MixingExtension implements ICraftingCategoryExtension {
+        private final List<List<ItemStack>> inputs=new ArrayList<>();
+        private final List<ItemStack> outputs=new ArrayList<>();
+        private final Random random=new Random();
+        private List<IRecipeSlotDrawable> slots=List.of();
+        private List<Integer> choices=List.of();
+        private long lastTime=-1,elapsed,step=-1;
+        private int displayed;
+        private void rebuild() {
+            inputs.clear();outputs.clear();step=-1;lastTime=-1;elapsed=0;
+            var kinds=SpiceKind.all().stream().filter(kind->kind != SpiceKind.CREATIVE&&!kind.accompaniment()&&kind.available()).toList();
+            for (var row : MixingPreview.combinations(kinds)) add(row);
+        }
+        private void add(List<SpiceKind> row) {
+            inputs.add(row.stream().map(Seasoning::material).toList());
+            outputs.add(Seasoning.mixedPowder(row,SpiceConfig.mixedCount));
+        }
+        @Override public void setRecipe(IRecipeLayoutBuilder builder,ICraftingGridHelper grid,IFocusGroup focuses) {
+            rebuild();
+            focuses.getItemStackFocuses().filter(focus->focus.getRole()==RecipeIngredientRole.OUTPUT).forEach(focus->{
+                ItemStack target=focus.getTypedValue().getIngredient(); var composition=Seasoning.components(target);
+                List<SpiceKind> row=new ArrayList<>();
+                for(var kind:new LinkedHashSet<>(composition))for(int j=0;j<Seasoning.amount(composition,kind)&&row.size()<=8;j++)row.add(kind);
+                if(Seasoning.mixed(target)&&row.size()==SpiceConfig.mixedIngredients)add(row);
+            });
+            choices=new ArrayList<>();
+            for(int i=0;i<outputs.size();i++) {
+                int index=i;
+                if(focuses.getItemStackFocuses().allMatch(focus-> {
+                    var value=focus.getTypedValue().getIngredient();
+                    return focus.getRole()==RecipeIngredientRole.OUTPUT?same(outputs.get(index),value)
+                        :ItemStack.isSameItemSameTags(SpiceConfig.mixedCatalyst(),value)||inputs.get(index).stream().anyMatch(input->same(input,value));
+                }))choices.add(i);
             }
-            for (int i = 0; i < recipe.outputs.size(); i++) {
-                stacks.init(4 + i, false, i == 0 ? 94 : 123, 9); stacks.set(4 + i, recipe.outputs.get(i));
+            if(choices.isEmpty())for(int i=0;i<outputs.size();i++)choices.add(i);
+            for(int i=0;i<SpiceConfig.mixedIngredients;i++) {
+                int slot=i;builder.addInputSlot(1+18*(MixingPreview.gridSlot(i)%3),1+18*(MixingPreview.gridSlot(i)/3)).setSlotName("powder"+i).addItemStacks(inputs.stream().map(row->row.get(slot)).toList());
             }
+            builder.addInputSlot(1+18*(MixingPreview.catalystSlot()%3),1+18*(MixingPreview.catalystSlot()/3)).setSlotName("catalyst").addItemStack(SpiceConfig.mixedCatalyst())
+                .addTooltipCallback((view,tooltip)->{if(!SpiceConfig.consumeMixedCatalyst)tooltip.add(Component.translatable("solwarly.jei.not_consumed"));});
+            builder.addOutputSlot(95,19).setSlotName("result").addItemStacks(outputs);builder.setShapeless();
+        }
+        @Override public void onDisplayedIngredientsUpdate(List<IRecipeSlotDrawable> slots,IFocusGroup focuses) { this.slots=slots;display(); }
+        private static boolean same(ItemStack first,ItemStack second) {
+            return first.getItem()==SpiceRegistry.spice && second.getItem()==SpiceRegistry.spice
+                ? Seasoning.mixed(first)==Seasoning.mixed(second) && Seasoning.identity(Seasoning.components(first)).equals(Seasoning.identity(Seasoning.components(second)))
+                : ItemStack.isSameItemSameTags(first,second);
+        }
+        private void display() {
+            if(choices.isEmpty())return;
+            long time=System.nanoTime()/1_000_000;
+            if(lastTime>=0&&!Screen.hasShiftDown())elapsed+=Math.max(0,time-lastTime);lastTime=time;
+            if(step!=elapsed/1000) { step=elapsed/1000;displayed=choices.get(random.nextInt(choices.size())); }
+            for(var slot:slots) {
+                String name=slot.getSlotName().orElse("");ItemStack value;
+                if(name.startsWith("powder"))value=inputs.get(displayed).get(Integer.parseInt(name.substring(6)));
+                else if(name.equals("result"))value=outputs.get(displayed);else continue;
+                slot.createDisplayOverrides().addItemStack(value);
+            }
+        }
+        @Override public void drawInfo(int width,int height,GuiGraphics graphics,double x,double y) { display(); }
+    }
+    private static final class UpgradeExtension implements ICraftingCategoryExtension {
+        @Override public void setRecipe(IRecipeLayoutBuilder builder,ICraftingGridHelper grid,IFocusGroup focuses) {
+            List<List<ItemStack>> inputs=new ArrayList<>();
+            for(int i=0;i<9;i++)inputs.add(i==0||i==2?List.of():i==4?List.of(new ItemStack(LunchRegistry.BAG.get()),new ItemStack(LunchRegistry.BOX.get())):List.of(new ItemStack(Items.IRON_INGOT),new ItemStack(Items.GOLD_INGOT)));
+            var slots=grid.createAndSetInputs(builder,inputs,3,3);
+            var output=grid.createAndSetOutputs(builder,List.of(new ItemStack(LunchRegistry.BOX.get()),new ItemStack(LunchRegistry.GOLD.get())));
+            List<IIngredientAcceptor<?>> linked=new ArrayList<>();
+            for(int i=0;i<slots.size();i++)if(!inputs.get(i).isEmpty())linked.add(slots.get(i));
+            linked.add(output);builder.createFocusLink(linked.toArray(IIngredientAcceptor[]::new));
         }
     }
 }

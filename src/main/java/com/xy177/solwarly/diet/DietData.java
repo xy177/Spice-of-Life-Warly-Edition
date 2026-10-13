@@ -5,7 +5,7 @@ import net.minecraftforge.common.util.INBTSerializable;
 import com.xy177.solwarly.spice.Seasoning;
 import java.util.*;
 
-public final class DietData implements INBTSerializable<NBTTagCompound> {
+public final class DietData implements INBTSerializable<CompoundTag> {
     public boolean initialized;
     public double legacyHealthFloor;
     private final Map<String, Double> bases = new LinkedHashMap<>();
@@ -120,63 +120,63 @@ public final class DietData implements INBTSerializable<NBTTagCompound> {
         });
     }
 
-    @Override public NBTTagCompound serializeNBT() {
-        NBTTagCompound tag = new NBTTagCompound();
-        tag.setInteger("version", initialized ? 2 : 0);
-        tag.setDouble("legacyHealthFloor", legacyHealthFloor);
-        tag.setByte("warlyOverride", warlyOverride);
-        NBTTagList repeatsTag = new NBTTagList();
+    @Override public CompoundTag serializeNBT() {
+        CompoundTag tag = new CompoundTag();
+        tag.putInt("version", initialized ? 2 : 0);
+        tag.putDouble("legacyHealthFloor", legacyHealthFloor);
+        tag.putByte("warlyOverride", warlyOverride);
+        ListTag repeatsTag = new ListTag();
         for (Map.Entry<String, Repeat> entry : repeats.entrySet()) {
-            NBTTagCompound value = new NBTTagCompound(); value.setString("food", entry.getKey());
-            value.setInteger("count", entry.getValue().count); value.setLong("lastClock", entry.getValue().lastClock);
-            repeatsTag.appendTag(value);
+            CompoundTag value = new CompoundTag(); value.putString("food", entry.getKey());
+            value.putInt("count", entry.getValue().count); value.putLong("lastClock", entry.getValue().lastClock);
+            repeatsTag.add(value);
         }
-        tag.setTag("warlyRepeats", repeatsTag);
-        NBTTagList history = new NBTTagList();
+        tag.put("warlyRepeats", repeatsTag);
+        ListTag history = new ListTag();
         for (String food : bases.keySet()) {
-            NBTTagCompound entry = new NBTTagCompound();
-            entry.setString("food", food); entry.setDouble("base", bases.get(food));
-            entry.setDouble("fraction", fractions.get(food));
-            NBTTagList tastes = new NBTTagList();
-            flavors.get(food).forEach(flavor -> tastes.appendTag(new NBTTagString(flavor)));
-            entry.setTag("flavors", tastes); history.appendTag(entry);
+            CompoundTag entry = new CompoundTag();
+            entry.putString("food", food); entry.putDouble("base", bases.get(food));
+            entry.putDouble("fraction", fractions.get(food));
+            ListTag tastes = new ListTag();
+            flavors.get(food).forEach(flavor -> tastes.add(StringTag.valueOf(flavor)));
+            entry.put("flavors", tastes); history.add(entry);
         }
-        tag.setTag("history", history);
-        NBTTagList recent = new NBTTagList();
+        tag.put("history", history);
+        ListTag recent = new ListTag();
         for (Meal meal : meals) {
-            NBTTagCompound entry = new NBTTagCompound();
-            entry.setString("food", meal.food); entry.setString("flavor", meal.flavor);
-            entry.setDouble("contribution", meal.contribution); recent.appendTag(entry);
+            CompoundTag entry = new CompoundTag();
+            entry.putString("food", meal.food); entry.putString("flavor", meal.flavor);
+            entry.putDouble("contribution", meal.contribution); recent.add(entry);
         }
-        tag.setTag("meals", recent);
+        tag.put("meals", recent);
         return tag;
     }
-    @Override public void deserializeNBT(NBTTagCompound tag) {
+    @Override public void deserializeNBT(CompoundTag tag) {
         bases.clear(); fractions.clear(); flavors.clear(); meals.clear(); repeats.clear();
-        initialized = tag.getInteger("version") > 0;
+        initialized = tag.getInt("version") > 0;
         legacyHealthFloor = tag.getDouble("legacyHealthFloor");
-        warlyOverride = tag.hasKey("warlyOverride") ? tag.getByte("warlyOverride") : -1;
-        NBTTagList repeatsTag = tag.getTagList("warlyRepeats", 10);
-        for (int i = 0; i < repeatsTag.tagCount(); i++) {
-            NBTTagCompound value = repeatsTag.getCompoundTagAt(i);
-            Repeat repeat = new Repeat(); repeat.count = Math.max(0, value.getInteger("count"));
+        warlyOverride = tag.contains("warlyOverride") ? tag.getByte("warlyOverride") : -1;
+        ListTag repeatsTag = tag.getList("warlyRepeats", 10);
+        for (int i = 0; i < repeatsTag.size(); i++) {
+            CompoundTag value = repeatsTag.getCompound(i);
+            Repeat repeat = new Repeat(); repeat.count = Math.max(0, value.getInt("count"));
             repeat.lastClock = value.getLong("lastClock"); repeats.put(value.getString("food"), repeat);
         }
-        NBTTagList history = tag.getTagList("history", 10);
-        for (int i = 0; i < history.tagCount(); i++) {
-            NBTTagCompound entry = history.getCompoundTagAt(i);
+        ListTag history = tag.getList("history", 10);
+        for (int i = 0; i < history.size(); i++) {
+            CompoundTag entry = history.getCompound(i);
             String food = entry.getString("food");
-            NBTTagList tastes = entry.getTagList("flavors", 8);
+            ListTag tastes = entry.getList("flavors", 8);
             Set<String> set = new LinkedHashSet<>();
-            for (int j = 0; j < tastes.tagCount(); j++) set.add(Seasoning.canonicalFlavor(tastes.getStringTagAt(j)));
+            for (int j = 0; j < tastes.size(); j++) set.add(Seasoning.canonicalFlavor(tastes.getString(j)));
             if (!set.isEmpty()) {
                 bases.put(food, entry.getDouble("base")); flavors.put(food, set);
-                fractions.put(food, entry.hasKey("fraction") ? entry.getDouble("fraction") : 0.5);
+                fractions.put(food, entry.contains("fraction") ? entry.getDouble("fraction") : 0.5);
             }
         }
-        NBTTagList recent = tag.getTagList("meals", 10);
-        for (int i = 0; i < recent.tagCount(); i++) {
-            NBTTagCompound entry = recent.getCompoundTagAt(i);
+        ListTag recent = tag.getList("meals", 10);
+        for (int i = 0; i < recent.size(); i++) {
+            CompoundTag entry = recent.getCompound(i);
             meals.addLast(new Meal(entry.getString("food"), entry.getString("flavor"), entry.getDouble("contribution")));
         }
     }

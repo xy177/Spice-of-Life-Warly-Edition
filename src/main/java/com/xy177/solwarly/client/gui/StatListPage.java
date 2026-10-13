@@ -1,6 +1,6 @@
-// Modified by xy177 on 2026-10-10 for Spice of Life Warly Edition; upstream LGPL 2.1.
 package com.xy177.solwarly.client.gui;
 
+import com.xy177.solwarly.SOLWarlyConfig;
 import com.xy177.solwarly.client.gui.elements.UIBox;
 import com.xy177.solwarly.tracking.ProgressInfo;
 
@@ -13,7 +13,6 @@ final class StatListPage extends Page {
 		super(frame, localized("gui", "food_book.stats"));
 		
 		ProgressInfo progressInfo = foodData.progressInfo;
-		ProgressInfo.ConfigInfo configInfo = progressInfo.configInfo;
 		ProgressGraph progressGraph = new ProgressGraph(foodData, getCenterX(), (int) mainStack.frame.getMinY() + 43);
 		children.add(progressGraph);
 		
@@ -22,27 +21,28 @@ final class StatListPage extends Page {
 		mainStack.addChild(makeSeparatorLine());
 		
 		String foodsTasted;
-		if (configInfo.shouldShowUneatenFoods) {
+		if (SOLWarlyConfig.shouldShowUneatenFoods()) {
 			foodsTasted = fraction(progressInfo.foodsEaten, foodData.validFoods.size());
 		} else {
 			foodsTasted = "" + progressInfo.foodsEaten;
 		}
 		
 		mainStack.addChild(statWithIcon(
-			icon(GuiFoodBook.carrotImage),
+			FoodBookScreen.carrotImage,
 			foodsTasted,
 			localized("gui", "food_book.stats.foods_tasted")
 		));
 		
 		mainStack.addChild(makeSeparatorLine());
 		
+		int heartsPerMilestone = SOLWarlyConfig.getHeartsPerMilestone();
 		String heartsGained = fraction(
-			configInfo.heartsPerMilestone * progressInfo.milestonesAchieved(),
-			configInfo.heartsPerMilestone * configInfo.milestones.length
+			heartsPerMilestone * progressInfo.milestonesAchieved(),
+			heartsPerMilestone * SOLWarlyConfig.getMilestoneCount()
 		);
 		
 		mainStack.addChild(statWithIcon(
-			icon(GuiFoodBook.heartImage),
+			FoodBookScreen.heartImage,
 			heartsGained,
 			localized("gui", "food_book.stats.hearts_gained")
 		));
