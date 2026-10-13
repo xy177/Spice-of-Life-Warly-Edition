@@ -1,4 +1,4 @@
-// Modified by xy177 from the carrot book's ProgressGraph layout; upstream LGPL 2.1.
+// Modified by xy177 on 2026-10-13 from the carrot book's ProgressGraph layout; upstream LGPL 2.1.
 package com.xy177.solwarly.client.gui;
 
 import com.xy177.solwarly.client.gui.elements.*;
