@@ -1,6 +1,6 @@
 package com.xy177.solwarly.diet;
 
-import net.minecraftforge.common.config.Configuration;
+import com.xy177.solwarly.config.Configuration;
 import java.io.File;
 
 public final class DietConfig {
@@ -15,30 +15,34 @@ public final class DietConfig {
         cravingMultiplier = 1.25, normalMultiplier = 1, boringMultiplier = 0.75, uniformChance = 0.2,
         frequencyWeight = -1;
     public static double snackBoundary, mealBoundary, cuisineBoundary;
-    public static final java.util.Map<String, Double> teaWeights = new java.util.LinkedHashMap<>();
     public static String[] cumulativeRewards = {"20|4", "50|8", "90|12", "140|16", "200|20"};
     public static String[] attributes = {
-        "5|generic.maxHealth|2|0", "10|generic.maxHealth|4|0",
-        "15|generic.maxHealth|4|0", "15|generic.movementSpeed|0.05|2",
-        "25|generic.maxHealth|6|0", "25|generic.movementSpeed|0.05|2",
-        "40|generic.maxHealth|8|0", "40|generic.movementSpeed|0.10|2", "40|generic.attackDamage|1|0"};
+        "5|minecraft:generic.max_health|2|0", "10|minecraft:generic.max_health|4|0",
+        "15|minecraft:generic.max_health|4|0", "15|minecraft:generic.movement_speed|0.05|2",
+        "25|minecraft:generic.max_health|6|0", "25|minecraft:generic.movement_speed|0.05|2",
+        "40|minecraft:generic.max_health|8|0", "40|minecraft:generic.movement_speed|0.10|2", "40|minecraft:generic.attack_damage|1|0"};
     public static String[] effects = {}, excludedInterest = {};
     public static String[] alwaysCraved = {}, alwaysBoring = {};
-    public static String[] rawSources = {"minecraft:wheat", "minecraft:melon", "minecraft:iron_ore", "minecraft:gold_ore",
+    public static String[] rawSources = {"minecraft:honey_bottle", "minecraft:wheat", "minecraft:melon_slice", "minecraft:iron_ore", "minecraft:gold_ore",
         "minecraft:apple", "minecraft:carrot", "minecraft:potato", "minecraft:beetroot", "minecraft:porkchop", "minecraft:beef",
-        "minecraft:chicken", "minecraft:mutton", "minecraft:rabbit", "minecraft:fish@0", "minecraft:fish@1", "minecraft:fish@2", "minecraft:fish@3",
-        "minecraft:egg", "minecraft:milk_bucket", "minecraft:reeds", "minecraft:dye@3", "farmersdelight:onion",
+        "minecraft:chicken", "minecraft:mutton", "minecraft:rabbit", "minecraft:cod", "minecraft:salmon", "minecraft:tropical_fish", "minecraft:pufferfish",
+        "minecraft:egg", "minecraft:milk_bucket", "minecraft:sugar_cane", "minecraft:cocoa_beans", "farmersdelight:onion",
         "farmersdelight:cabbage", "farmersdelight:tomato", "farmersdelight:rice_panicle", "minecraft:pumpkin",
         "minecraft:diamond", "minecraft:emerald", "minecraft:coal", "minecraft:redstone", "minecraft:quartz",
-        "minecraft:dye@4", "minecraft:slime_ball", "minecraft:bone", "minecraft:blaze_rod", "minecraft:leather", "teastory:tea_leaf", "teastory:xian_rice",
-        "minecraft:rotten_flesh", "minecraft:string", "minecraft:prismarine_shard", "minecraft:prismarine_crystals"};
+        "minecraft:lapis_lazuli", "minecraft:slime_ball", "minecraft:bone", "minecraft:blaze_rod", "minecraft:leather",
+        "minecraft:rotten_flesh", "minecraft:string", "minecraft:prismarine_shard", "minecraft:prismarine_crystals",
+        "minecraft:sweet_berries", "minecraft:glow_berries", "minecraft:chorus_fruit",
+        "fruitsdelight:blueberry", "fruitsdelight:hawberry", "fruitsdelight:lychee", "fruitsdelight:mango",
+        "fruitsdelight:orange", "fruitsdelight:peach", "fruitsdelight:pear", "fruitsdelight:persimmon",
+        "fruitsdelight:lemon", "fruitsdelight:cranberry", "fruitsdelight:mangosteen", "fruitsdelight:bayberry",
+        "fruitsdelight:kiwi", "fruitsdelight:fig"};
     public static File directory;
 
     public static void load(File directory) {
         DietConfig.directory = directory;
-        Configuration config = new Configuration(new File(directory, "solwarly.cfg"));
+        Configuration config = new Configuration(new File(directory, "solwarly.toml"));
         config.load();
-        config.setCategoryComment("statistics", "饮食统计。原配置 solcarrot.cfg 的筛选与死亡规则仍生效。\nDietary statistics. Legacy filters and death settings remain in solcarrot.cfg.");
+        config.setCategoryComment("statistics", "饮食统计。原配置 solcarrot-common.toml 的筛选与死亡规则仍生效。\nDietary statistics. Legacy filters and death settings remain in solcarrot-common.toml.");
         warlyMode = config.getBoolean("warlyMode", "warlyMode", false,
             "是否全局启用沃利模式；玩家可用指令单独覆盖。\nWhether Warly Mode is enabled globally; players may override it with a command.");
         warlyDurationDays = config.getInt("repeatDurationDays", "warlyMode", 2, 1, 100,
@@ -80,9 +84,6 @@ public final class DietConfig {
         cuttingWeight = coefficient(config, "cuttingWeight", 1, "砧板工序权重。\nCutting board process weight.");
         cookingWeight = coefficient(config, "cookingWeight", 1.5, "厨锅工序权重。\nCooking pot process weight.");
         servingWeight = coefficient(config, "servingWeight", 0.25, "分食工序权重，继承整道菜难度。\nServing process weight; inherits the whole dish difficulty.");
-        for (String process : new String[] {"cookingPan", "dryingPan", "sunDrying", "indoorAging", "wetting", "stoveDrying", "stoveSteam", "teaTable", "riceWashing", "waterHeating", "mortarGrinding"})
-            teaWeights.put(process, config.get("preparation.teastory", process, 1.75,
-                "茶风工序 " + process + " 的权重（炒制、烘干、日晒、陈化、浸湿、焙火、蒸青、泡茶、洗米、烧水、研钵研磨）。\nWeight of Tea the Story operation " + process + " (pan cooking/drying, sun drying, aging, wetting, stove drying/steam, brewing, washing rice, boiling water, mortar grinding).", 0, 100).getDouble(1.75));
         snackBoundary = config.get("foodQuality", "mealMinimum", 0.0,
             "正餐最低原味分数，0表示按当前允许计入阅历的食物四等分自动确定；同分归同档。\nMinimum plain score for Meals; 0 uses current eligible food quartiles. Equal scores share a tier.", 0, 100000).getDouble();
         mealBoundary = config.get("foodQuality", "cuisineMinimum", 0.0,
@@ -102,15 +103,15 @@ public final class DietConfig {
         attributes = validRewards(attributes, 4);
         effects = validRewards(effects, 3);
         excludedInterest = config.get("statistics", "excludedDailyFoods", excludedInterest,
-            "只排除每日兴趣候选，不排除饮食统计；食物标识为modid:item@子类型。\nExclude from daily appetite selection only, not dietary statistics; IDs use modid:item@metadata.").getStringList();
+            "只排除每日兴趣候选，不排除饮食统计；食物标识为modid:item。\nExclude from daily appetite selection only, not dietary statistics; IDs use modid:item.").getStringList();
         alwaysCraved = fixedFoods(config.get("statistics", "alwaysCravedFoods", new String[0],
-            "始终垂涎欲滴的食物，modid:item@子类型（省略@时为0）；不参与每日抽选，不占每日名额，不绕过统计黑名单。\nAlways-craved foods, using modid:item@metadata (omitted metadata means 0); excluded from daily draws and daily quotas, without bypassing dietary filters.").getStringList());
+            "始终垂涎欲滴的食物，modid:item；不参与每日抽选，不占每日名额，不绕过统计黑名单。\nAlways-craved foods, using modid:item; excluded from daily draws and daily quotas, without bypassing dietary filters.").getStringList());
         alwaysBoring = fixedFoods(config.get("statistics", "alwaysBoringFoods", new String[0],
             "始终索然无味的食物，格式同上；与垂涎名单冲突时以此名单为准，不参与每日抽选和名额。\nAlways-boring foods, using the same ID format; take precedence over always-craved foods and do not participate in daily draws or quotas.").getStringList());
         for (String food : alwaysCraved) if (java.util.Arrays.asList(alwaysBoring).contains(food))
             com.xy177.solwarly.SOLWarly.LOGGER.warn("Food appears in both fixed appetite lists; always-boring wins: {}", food);
         rawSources = config.get("preparation", "rawSources", rawSources,
-            "自然获取的原料入口，避免压缩/拆分配方循环。modid:item 或 modid:item@子类型；仅对无子类型物品可省略@0。\nNaturally obtained preparation roots, preventing packing/unpacking cycles. Use modid:item or modid:item@metadata.").getStringList();
+            "自然获取的原料入口，避免压缩/拆分配方循环。使用物品注册名 modid:item。\nNaturally obtained preparation roots, preventing packing/unpacking cycles. Use item registry IDs: modid:item.").getStringList();
         config.save(); // Forge does not mark comment-only updates as changed.
     }
     public static String[] validRewards(String[] entries, int fields) {
@@ -123,7 +124,7 @@ public final class DietConfig {
                 if (fields == 2 && !nonnegative(parts[1])) throw new IllegalArgumentException();
                 if (fields >= 3 && parts[1].isEmpty()) throw new IllegalArgumentException();
                 if (fields == 3) {
-                    new net.minecraft.util.ResourceLocation(parts[1]);
+                    new net.minecraft.resources.ResourceLocation(parts[1]);
                     int amplifier = Integer.parseInt(parts[2]);
                     if (amplifier < 0 || amplifier > 255) throw new IllegalArgumentException();
                 }
@@ -146,7 +147,7 @@ public final class DietConfig {
                 com.xy177.solwarly.SOLWarly.LOGGER.warn("Ignoring invalid fixed appetite food ID: {}", entry);
                 continue;
             }
-            result.add(id.contains("@") ? id : id + "@0");
+            result.add(id.endsWith("@0") ? id.substring(0,id.length()-2) : id);
         }
         return result.toArray(new String[0]);
     }

@@ -1,22 +1,38 @@
 package com.xy177.solwarly.diet;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.nbt.*;
-import net.minecraft.util.EnumFacing;
+import com.xy177.solwarly.SOLWarly;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.common.capabilities.*;
+import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.event.AttachCapabilitiesEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import javax.annotation.Nullable;
 
-public final class DietCapability implements ICapabilitySerializable<NBTTagCompound> {
-    @CapabilityInject(DietData.class) public static Capability<DietData> TYPE;
-    private final DietData data = new DietData();
-    public static void register() {
-        CapabilityManager.INSTANCE.register(DietData.class, new Capability.IStorage<DietData>() {
-            public NBTBase writeNBT(Capability<DietData> capability, DietData data, EnumFacing side) { return data.serializeNBT(); }
-            public void readNBT(Capability<DietData> capability, DietData data, EnumFacing side, NBTBase tag) { data.deserializeNBT((NBTTagCompound) tag); }
-        }, DietData::new);
+@Mod.EventBusSubscriber(modid=SOLWarly.MOD_ID)
+public final class DietCapability implements ICapabilitySerializable<CompoundTag> {
+    public static final Capability<DietData> TYPE=CapabilityManager.get(new CapabilityToken<>() {});
+    private final DietData data=new DietData();
+    private final LazyOptional<DietData> optional=LazyOptional.of(()->data);
+    public static DietData get(Player player) { return player.getCapability(TYPE).orElse(null); }
+    @SubscribeEvent public static void attach(AttachCapabilitiesEvent<Entity> event) {
+        if(event.getObject() instanceof Player) {
+            DietCapability provider=new DietCapability();
+            event.addCapability(new ResourceLocation("solwarly:diet"),provider);
+            event.addListener(provider.optional::invalidate);
+        }
     }
-    public static DietData get(EntityPlayer player) { return TYPE == null ? null : player.getCapability(TYPE, null); }
-    public boolean hasCapability(Capability<?> capability, EnumFacing facing) { return capability == TYPE; }
-    @SuppressWarnings("unchecked") public <T> T getCapability(Capability<T> capability, EnumFacing facing) { return capability == TYPE ? (T) data : null; }
-    public NBTTagCompound serializeNBT() { return data.serializeNBT(); }
-    public void deserializeNBT(NBTTagCompound tag) { data.deserializeNBT(tag); }
+    @Mod.EventBusSubscriber(modid=SOLWarly.MOD_ID,bus=Mod.EventBusSubscriber.Bus.MOD)
+    public static final class Registration {
+        @SubscribeEvent public static void register(RegisterCapabilitiesEvent event) { event.register(DietData.class); }
+    }
+    @Override public <T> LazyOptional<T> getCapability(Capability<T> capability,@Nullable Direction side) {
+        return capability==TYPE ? optional.cast() : LazyOptional.empty();
+    }
+    @Override public CompoundTag serializeNBT() { return data.serializeNBT(); }
+    @Override public void deserializeNBT(CompoundTag tag) { data.deserializeNBT(tag); }
 }

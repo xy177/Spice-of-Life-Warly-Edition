@@ -1,0 +1,9 @@
+{
+  "loader": "forge:obj",
+  "model": "solwarly:models/block/spice_grinder.obj",
+  "flip_v": false,
+  "automatic_culling": false,
+  "textures": {
+    "particle": "minecraft:block/bricks"
+  }
+}

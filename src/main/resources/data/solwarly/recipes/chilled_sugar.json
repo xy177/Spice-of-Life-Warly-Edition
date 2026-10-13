@@ -1,0 +1,62 @@
+{
+  "type": "immortalers_delight:enchantal_cooler",
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "immortalers_delight"
+    }
+  ],
+  "ingredients": [
+    {
+      "type": "forge:partial_nbt",
+      "item": "solwarly:spice",
+      "nbt": {
+        "SpiceFlavor": "sugar",
+        "SpiceComponents": [
+          "sugar"
+        ]
+      }
+    },
+    {
+      "type": "forge:partial_nbt",
+      "item": "solwarly:spice",
+      "nbt": {
+        "SpiceFlavor": "sugar",
+        "SpiceComponents": [
+          "sugar"
+        ]
+      }
+    },
+    {
+      "type": "forge:partial_nbt",
+      "item": "solwarly:spice",
+      "nbt": {
+        "SpiceFlavor": "sugar",
+        "SpiceComponents": [
+          "sugar"
+        ]
+      }
+    },
+    {
+      "type": "forge:partial_nbt",
+      "item": "solwarly:spice",
+      "nbt": {
+        "SpiceFlavor": "sugar",
+        "SpiceComponents": [
+          "sugar"
+        ]
+      }
+    }
+  ],
+  "output": {
+    "item": "solwarly:spice",
+    "count": 4,
+    "nbt": {
+      "SpiceFlavor": "chilled_sugar",
+      "SpiceColor": 11132908,
+      "SpiceComponents": [
+        "chilled_sugar"
+      ]
+    }
+  }
+}

@@ -1,4 +1,3 @@
-// Modified by xy177 on 2026-10-10 for Spice of Life Warly Edition; upstream LGPL 2.1.
 package com.xy177.solwarly.client.gui;
 
 import com.xy177.solwarly.client.gui.elements.*;
@@ -18,7 +17,7 @@ abstract class Page extends UIElement {
 		mainStack.axis = UIStack.Axis.VERTICAL;
 		mainStack.spacing = spacing;
 		
-		UILabel headerLabel = new UILabel(header, frame.width - 42);
+		UILabel headerLabel = new UILabel(header,frame.width-62);
 		mainStack.addChild(headerLabel);
 		
 		mainStack.addChild(makeSeparatorLine());
@@ -41,22 +40,15 @@ abstract class Page extends UIElement {
 	}
 	
 	UIElement makeSeparatorLine() {
-		return UIBox.horizontalLine(0, getWidth() / 2, 0, GuiFoodBook.leastBlack);
+		return UIBox.horizontalLine(0, getWidth() / 2, 0, FoodBookScreen.leastBlack);
 	}
 	
-	UIImage icon(UIImage.Image image) {
-		UIImage icon = new UIImage(image);
-		icon.setWidth(11);
-		icon.setHeight(11);
-		return icon;
-	}
-	
-	UIElement statWithIcon(UIImage icon, String value, String name) {
+	UIElement statWithIcon(ImageData icon, String value, String name) {
 		UIStack valueStack = new UIStack();
 		valueStack.axis = UIStack.Axis.HORIZONTAL;
 		valueStack.spacing = 3;
 		
-		valueStack.addChild(icon);
+		valueStack.addChild(new UIImage(icon));
 		valueStack.addChild(new UILabel(value));
 		
 		UIStack fullStack = new UIStack();
@@ -64,10 +56,11 @@ abstract class Page extends UIElement {
 		fullStack.spacing = 2;
 		
 		fullStack.addChild(valueStack);
-		UILabel nameLabel = new UILabel(name, frame.width - 42);
-		nameLabel.color = GuiFoodBook.lessBlack;
+		UILabel nameLabel = new UILabel(name,frame.width-62);
+		nameLabel.color = FoodBookScreen.lessBlack;
 		fullStack.addChild(nameLabel);
 		
 		return fullStack;
 	}
 }
+

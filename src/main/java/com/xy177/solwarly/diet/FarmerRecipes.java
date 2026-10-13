@@ -1,71 +1,32 @@
 package com.xy177.solwarly.diet;
 
-import net.minecraft.block.Block;
-import net.minecraft.item.*;
-import net.minecraftforge.fml.common.registry.ForgeRegistries;
+import com.xy177.solwarly.SOLWarly;
+import com.xy177.solwarly.registry.RegistryLookup;
+import net.minecraft.world.item.*;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.registries.ForgeRegistries;
+import java.lang.reflect.Method;
 import java.util.*;
-import java.lang.reflect.*;
 
-/** Optional adapter: class names never resolve unless Farmer's Delight is installed. */
-final class FarmerRecipes {
-    private static final String PREFIX = "com.wdcftgg.farmersdelightlegacy.";
-    static void add(PreparationGraph graph) {
-        try {
-            for (Object recipe : recipes("CookingPotRecipeApi")) {
-                ItemStack output = (ItemStack) call(recipe, "getResultStack");
-                FoodCatalog.discover(output);
-                List<List<String>> inputs = new ArrayList<>();
-                for (Object ingredient : (List<?>) call(recipe, "getIngredients")) {
-                    List<String> options = ids((List<?>) call(ingredient, "getDisplayStacks"));
-                    if (!options.isEmpty()) inputs.add(options);
+public final class FarmerRecipes {
+    public static void addServings(PreparationGraph graph) {
+        if(!ModList.get().isLoaded("farmersdelight"))return;
+        for(var block:ForgeRegistries.BLOCKS) {
+            try {
+                Method serving;
+                try { serving=block.getClass().getMethod("getServingItem",BlockState.class); }
+                catch(NoSuchMethodException absent) {
+                    try { serving=block.getClass().getMethod("getPieSliceItem"); }
+                    catch(NoSuchMethodException unsupported) { continue; }
                 }
-                graph.add(FoodCatalog.id(output), "pot:" + call(recipe, "getRecipeId"), DietConfig.cookingWeight, inputs);
-            }
-            for (Object recipe : recipes("CuttingBoardRecipeApi")) {
-                List<String> input = ids((List<?>) call(recipe, "getInputOptions"));
-                for (Object output : (List<?>) call(recipe, "getResultStacks")) {
-                    ItemStack stack = (ItemStack) output;
-                    FoodCatalog.discover(stack);
-                    if (!stack.isEmpty()) graph.add(FoodCatalog.id(stack), "cut:" + call(recipe, "getRecipeId"),
-                        DietConfig.cuttingWeight, Collections.singletonList(input));
-                }
-            }
-            Class<?> feast = Class.forName(PREFIX + "common.block.BlockFeast");
-            Class<?> pie = Class.forName(PREFIX + "common.block.BlockPie");
-            for (Block block : ForgeRegistries.BLOCKS) {
-                ItemStack whole = new ItemStack(Item.getItemFromBlock(block));
-                if (pie.isInstance(block) && block.getRegistryName().getPath().equals("pumpkin_pie"))
-                    whole = new ItemStack(net.minecraft.init.Items.PUMPKIN_PIE);
-                if (whole.isEmpty()) continue;
-                ItemStack portion = ItemStack.EMPTY;
-                if (feast.isInstance(block)) portion = (ItemStack) call(block, "getCookingPotServingStack");
-                else if (pie.isInstance(block)) {
-                    Field field = pie.getDeclaredField("sliceItemId"); field.setAccessible(true);
-                    Item item = ForgeRegistries.ITEMS.getValue((net.minecraft.util.ResourceLocation) field.get(block));
-                    if (item != null) portion = new ItemStack(item);
-                }
-                if (!portion.isEmpty()) {
-                    FoodCatalog.discover(portion);
-                    graph.add(FoodCatalog.id(portion), "serve:" + block.getRegistryName(),
-                        DietConfig.servingWeight, Collections.singletonList(Collections.singletonList(FoodCatalog.id(whole))));
-                }
-            }
-        } catch (ReflectiveOperationException e) {
-            throw new IllegalStateException("Farmer's Delight Legacy 1.1.2 recipe adapter failed", e);
+                ItemStack part=(ItemStack)(serving.getParameterCount()==0?serving.invoke(block):serving.invoke(block,block.defaultBlockState()));
+                Item item=block.asItem();
+                if(item==Items.AIR&&RegistryLookup.id(block).toString().equals("farmersdelight:pumpkin_pie"))item=Items.PUMPKIN_PIE;
+                if(item==Items.AIR||part.isEmpty())continue;
+                graph.add(FoodCatalog.id(part),"serving:"+RegistryLookup.id(block),DietConfig.servingWeight,List.of(List.of(RegistryLookup.id(item).toString())));
+            }catch(ReflectiveOperationException|RuntimeException e) { SOLWarly.LOGGER.warn("Cannot read feast serving for {}",RegistryLookup.id(block),e); }
         }
-    }
-    private static List<?> recipes(String name) throws ReflectiveOperationException {
-        return (List<?>) Class.forName(PREFIX + "api.recipe." + name).getMethod("getRecipes").invoke(null);
-    }
-    private static Object call(Object object, String name) throws ReflectiveOperationException { return object.getClass().getMethod(name).invoke(object); }
-    private static List<String> ids(List<?> stacks) {
-        List<String> result = new ArrayList<>();
-        for (Object object : stacks) {
-            ItemStack stack = (ItemStack) object;
-            FoodCatalog.discover(stack);
-            if (!stack.isEmpty()) result.add(FoodCatalog.id(stack));
-        }
-        return result;
     }
     private FarmerRecipes() {}
 }

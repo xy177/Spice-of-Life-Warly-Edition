@@ -1,65 +1,39 @@
 package com.xy177.solwarly.block;
 
-import com.xy177.solwarly.SOLWarly;
-import com.xy177.solwarly.spice.TileEntitySpiceGrinder;
-import net.minecraft.block.BlockContainer;
-import net.minecraft.block.BlockHorizontal;
-import net.minecraft.block.material.Material;
-import net.minecraft.block.properties.PropertyDirection;
-import net.minecraft.block.state.BlockStateContainer;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.*;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.block.Block;
-import net.minecraft.block.SoundType;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import com.xy177.solwarly.spice.*;
+import net.minecraft.core.*;
+import net.minecraft.world.*;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.*;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.entity.*;
+import net.minecraft.world.level.block.state.*;
+import net.minecraft.world.level.block.state.properties.*;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.*;
 
-@Mod.EventBusSubscriber(modid = SOLWarly.MOD_ID)
-public final class BlockSpiceGrinder extends BlockContainer {
-    public static final PropertyDirection FACING = BlockHorizontal.FACING;
-    public static final BlockSpiceGrinder INSTANCE = new BlockSpiceGrinder();
-
-    private BlockSpiceGrinder() {
-        super(Material.WOOD); setRegistryName(SOLWarly.MOD_ID, "spice_grinder");
-        setDefaultState(blockState.getBaseState().withProperty(FACING, EnumFacing.SOUTH));
-        setTranslationKey(SOLWarly.MOD_ID + ".spice_grinder"); setHardness(2.0F); setResistance(3.0F);
-        setSoundType(SoundType.WOOD); setCreativeTab(net.minecraft.creativetab.CreativeTabs.DECORATIONS);
+public final class BlockSpiceGrinder extends BaseEntityBlock {
+    public static final DirectionProperty FACING=BlockStateProperties.HORIZONTAL_FACING;
+    public BlockSpiceGrinder() {
+        super(Properties.of().strength(2,3).sound(SoundType.WOOD).noOcclusion());registerDefaultState(stateDefinition.any().setValue(FACING,Direction.SOUTH));
     }
-    @SubscribeEvent public static void register(RegistryEvent.Register<Block> event) { event.getRegistry().register(INSTANCE); }
-    @Override protected BlockStateContainer createBlockState() { return new BlockStateContainer(this, FACING); }
-    @Override public IBlockState getStateFromMeta(int meta) {
-        return getDefaultState().withProperty(FACING, EnumFacing.byHorizontalIndex(meta));
+    @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block,BlockState> builder) { builder.add(FACING); }
+    @Override public BlockState getStateForPlacement(BlockPlaceContext context) { return defaultBlockState().setValue(FACING,context.getHorizontalDirection().getOpposite()); }
+    @Override public BlockState rotate(BlockState state,Rotation rotation) { return state.setValue(FACING,rotation.rotate(state.getValue(FACING))); }
+    @Override public BlockState mirror(BlockState state,Mirror mirror) { return state.rotate(mirror.getRotation(state.getValue(FACING))); }
+    @Override public BlockEntity newBlockEntity(BlockPos pos,BlockState state) { return new TileEntitySpiceGrinder(pos,state); }
+    @Override public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level,BlockState state,BlockEntityType<T> type) {
+        return level.isClientSide?null:createTickerHelper(type,SpiceRegistry.GRINDER_ENTITY.get(),(world,pos,block,tile)->tile.update());
     }
-    @Override public int getMetaFromState(IBlockState state) { return state.getValue(FACING).getHorizontalIndex(); }
-    @Override public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing side,
-            float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer, EnumHand hand) {
-        return getDefaultState().withProperty(FACING, placer.getHorizontalFacing().getOpposite());
+    @Override public RenderShape getRenderShape(BlockState state) { return RenderShape.ENTITYBLOCK_ANIMATED; }
+    @Override public VoxelShape getShape(BlockState state,BlockGetter world,BlockPos pos,CollisionContext context) { return Block.box(0,0,0,16,24,16); }
+    @Override public InteractionResult use(BlockState state,Level level,BlockPos pos,Player player,InteractionHand hand,BlockHitResult hit) {
+        if(!level.isClientSide&&level.getBlockEntity(pos) instanceof TileEntitySpiceGrinder grinder)grinder.insertHeld(player,hand);
+        return InteractionResult.sidedSuccess(level.isClientSide);
     }
-    @Override public TileEntity createNewTileEntity(World world, int meta) { return new TileEntitySpiceGrinder(); }
-    @Override public boolean hasTileEntity(IBlockState state) { return true; }
-    @Override public boolean isOpaqueCube(IBlockState state) { return false; }
-    @Override public boolean isFullCube(IBlockState state) { return false; }
-    @Override public EnumBlockRenderType getRenderType(IBlockState state) { return EnumBlockRenderType.ENTITYBLOCK_ANIMATED; }
-    @Override public AxisAlignedBB getBoundingBox(IBlockState state, net.minecraft.world.IBlockAccess world, BlockPos pos) {
-        return new AxisAlignedBB(0, 0, 0, 1, 1.5, 1);
-    }
-    @Override public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand,
-            EnumFacing facing, float hitX, float hitY, float hitZ) {
-        if (world.isRemote) return true;
-        TileEntity tile = world.getTileEntity(pos);
-        if (tile instanceof TileEntitySpiceGrinder) ((TileEntitySpiceGrinder) tile).insertHeld(player, hand);
-        return true;
-    }
-    @Override public void breakBlock(World world, BlockPos pos, IBlockState state) {
-        TileEntity tile = world.getTileEntity(pos);
-        if (tile instanceof TileEntitySpiceGrinder) ((TileEntitySpiceGrinder) tile).dropContents();
-        super.breakBlock(world, pos, state);
+    @Override public void onRemove(BlockState state,Level level,BlockPos pos,BlockState next,boolean moving) {
+        if(state.getBlock()!=next.getBlock()&&!level.isClientSide&&level.getBlockEntity(pos) instanceof TileEntitySpiceGrinder grinder)grinder.dropContents();
+        super.onRemove(state,level,pos,next,moving);
     }
 }
