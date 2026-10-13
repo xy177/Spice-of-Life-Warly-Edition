@@ -1,22 +1,19 @@
 package com.xy177.solwarly.diet;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.nbt.*;
-import net.minecraft.util.EnumFacing;
-import net.minecraftforge.common.capabilities.*;
+import com.xy177.solwarly.tracking.FoodList;
+import net.minecraft.world.entity.player.Player;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.attachment.AttachmentType;
+import net.neoforged.neoforge.registries.*;
+import java.util.function.Supplier;
 
-public final class DietCapability implements ICapabilitySerializable<NBTTagCompound> {
-    @CapabilityInject(DietData.class) public static Capability<DietData> TYPE;
-    private final DietData data = new DietData();
-    public static void register() {
-        CapabilityManager.INSTANCE.register(DietData.class, new Capability.IStorage<DietData>() {
-            public NBTBase writeNBT(Capability<DietData> capability, DietData data, EnumFacing side) { return data.serializeNBT(); }
-            public void readNBT(Capability<DietData> capability, DietData data, EnumFacing side, NBTBase tag) { data.deserializeNBT((NBTTagCompound) tag); }
-        }, DietData::new);
-    }
-    public static DietData get(EntityPlayer player) { return TYPE == null ? null : player.getCapability(TYPE, null); }
-    public boolean hasCapability(Capability<?> capability, EnumFacing facing) { return capability == TYPE; }
-    @SuppressWarnings("unchecked") public <T> T getCapability(Capability<T> capability, EnumFacing facing) { return capability == TYPE ? (T) data : null; }
-    public NBTTagCompound serializeNBT() { return data.serializeNBT(); }
-    public void deserializeNBT(NBTTagCompound tag) { data.deserializeNBT(tag); }
+/** Retains the upstream 1.21 attachment identity and its serialized foodList. */
+public final class DietCapability {
+    private static final DeferredRegister<AttachmentType<?>> LEGACY=DeferredRegister.create(NeoForgeRegistries.Keys.ATTACHMENT_TYPES,"solcarrot");
+    private static final DeferredRegister<AttachmentType<?>> TYPES=DeferredRegister.create(NeoForgeRegistries.Keys.ATTACHMENT_TYPES,"solwarly");
+    public static final Supplier<AttachmentType<FoodList>> FOOD=LEGACY.register("food",()->AttachmentType.serializable(FoodList::new).build());
+    public static final Supplier<AttachmentType<DietData>> DIET=TYPES.register("diet",()->AttachmentType.serializable(DietData::new).build());
+    public static void setUp(IEventBus bus) { LEGACY.register(bus);TYPES.register(bus); }
+    public static DietData get(Player player) { return player.getData(DIET); }
+    private DietCapability() {}
 }

@@ -1,7 +1,7 @@
-// Modified by xy177 on 2026-10-10 for Spice of Life Warly Edition; upstream LGPL 2.1.
 package com.xy177.solwarly.client.gui.elements;
 
-import net.minecraft.client.renderer.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.gui.GuiGraphics;
 
 import java.awt.*;
 
@@ -9,24 +9,18 @@ public class UILabel extends UIElement {
 	public String text = "";
 	public TextAlignment alignment = TextAlignment.CENTER;
 	public Color color = Color.BLACK;
-	private float textScale = 1;
+    private float textScale=1;
 	
 	/** sets frame to text size */
 	public UILabel(String text) {
-		this(new Rectangle(fontRenderer.getStringWidth(text) - 1, 7), text);
-	}
-
-	/** Keep complete book labels inside the page, shrinking only text that exceeds its width. */
-	public UILabel(String text, int maxWidth) {
-		this(text);
-		int width = fontRenderer.getStringWidth(text);
-		if (width > maxWidth) {
-			textScale = (float) maxWidth / width;
-			frame.width = maxWidth;
-		}
+		this(new Rectangle(font.width(text) - 1, 7), text);
 	}
 	
-	public UILabel(Rectangle frame, String text) {
+	public UILabel(String text,int maxWidth) {
+        this(text);int width=font.width(text);
+        if(width>maxWidth) { textScale=(float)maxWidth/width;frame.width=maxWidth; }
+    }
+    public UILabel(Rectangle frame, String text) {
 		super(frame);
 		this.text = text;
 	}
@@ -36,23 +30,17 @@ public class UILabel extends UIElement {
 	}
 	
 	@Override
-	protected void render() {
-		super.render();
+	protected void render(GuiGraphics graphics) {
+		super.render(graphics);
 		
-		int textWidth = (int) Math.ceil((fontRenderer.getStringWidth(text) - 1) * textScale);
+		int textWidth = (int)Math.ceil((font.width(text)-1)*textScale);
 		int x = frame.x + (frame.width - textWidth) * alignment.ordinal / 2;
 		int y = frame.y + (frame.height - 7) / 2;
 		if (color.getTransparency() == Color.TRANSLUCENT) {
-			GlStateManager.enableBlend();
+			RenderSystem.enableBlend();
 		}
-		if (textScale == 1) fontRenderer.drawString(text, x, y, color.getRGB());
-		else {
-			GlStateManager.pushMatrix();
-			GlStateManager.translate(x, y, 0);
-			GlStateManager.scale(textScale, textScale, 1);
-			fontRenderer.drawString(text, 0, 0, color.getRGB());
-			GlStateManager.popMatrix();
-		}
+		graphics.pose().pushPose();graphics.pose().translate(x,y,0);graphics.pose().scale(textScale,textScale,1);
+        graphics.drawString(font,text,0,0,color.getRGB(),false);graphics.pose().popPose();
 	}
 	
 	enum TextAlignment {

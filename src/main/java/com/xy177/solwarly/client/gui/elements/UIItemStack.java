@@ -1,16 +1,12 @@
-// Modified by xy177 on 2026-10-10 for Spice of Life Warly Edition; upstream LGPL 2.1.
 package com.xy177.solwarly.client.gui.elements;
 
-import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.item.ItemStack;
-import net.minecraftforge.fml.client.config.GuiUtils;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.world.item.ItemStack;
 
 import java.awt.*;
-import java.util.List;
-import java.util.Optional;
 
-import static net.minecraft.client.util.ITooltipFlag.TooltipFlags.ADVANCED;
-import static net.minecraft.client.util.ITooltipFlag.TooltipFlags.NORMAL;
+import static net.minecraft.world.item.TooltipFlag.Default.ADVANCED;
+import static net.minecraft.world.item.TooltipFlag.Default.NORMAL;
 
 public class UIItemStack extends UIElement {
 	public static final int size = 16;
@@ -24,10 +20,10 @@ public class UIItemStack extends UIElement {
 	}
 	
 	@Override
-	protected void render() {
-		super.render();
+	protected void render(GuiGraphics graphics) {
+		super.render(graphics);
 		
-		mc.getRenderItem().renderItemIntoGUI(
+		graphics.renderItem(
 			itemStack,
 			frame.x + (frame.width - size) / 2,
 			frame.y + (frame.height - size) / 2
@@ -40,20 +36,9 @@ public class UIItemStack extends UIElement {
 	}
 	
 	@Override
-	protected void renderTooltip(int mouseX, int mouseY) {
-		List<String> tooltip = itemStack.getTooltip(mc.player, mc.gameSettings.advancedItemTooltips ? ADVANCED : NORMAL);
-		if (this.tooltip != null) tooltip = java.util.Arrays.asList(this.tooltip.split("\n"));
-		
-		GuiUtils.preItemToolTip(itemStack);
-		ScaledResolution resolution = new ScaledResolution(mc);
-		GuiUtils.drawHoveringText(
-			itemStack,
-			tooltip,
-			mouseX, mouseY,
-			resolution.getScaledWidth(), resolution.getScaledHeight(),
-			-1,
-			Optional.ofNullable(itemStack.getItem().getFontRenderer(itemStack)).orElse(fontRenderer)
-		);
-		GuiUtils.postItemToolTip();
+	protected void renderTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
+		var tooltip = itemStack.getTooltipLines(net.minecraft.world.item.Item.TooltipContext.of(mc.level),mc.player, mc.options.advancedItemTooltips ? ADVANCED : NORMAL);
+		if(this.tooltip!=null)tooltip=java.util.Arrays.stream(this.tooltip.split("\n")).map(net.minecraft.network.chat.Component::literal).map(value->(net.minecraft.network.chat.Component)value).toList();
+        renderTooltip(graphics, itemStack, tooltip, mouseX, mouseY);
 	}
 }

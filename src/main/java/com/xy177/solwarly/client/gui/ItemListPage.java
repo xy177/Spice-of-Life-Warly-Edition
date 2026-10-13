@@ -2,7 +2,7 @@
 package com.xy177.solwarly.client.gui;
 
 import com.xy177.solwarly.client.gui.elements.UIItemStack;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.ItemStack;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -41,8 +41,8 @@ final class ItemListPage extends Page {
 			
 			UIItemStack view = new UIItemStack(itemStack);
 			if (com.xy177.solwarly.spice.Seasoning.MIXED_FLAVOR.equals(com.xy177.solwarly.api.FlavorAPI.resolve(itemStack).id))
-				view.tooltip = net.minecraft.client.resources.I18n.format("solwarly.book.mixed_flavor") + "\n"
-					+ net.minecraft.client.resources.I18n.format("solwarly.book.any_mixed");
+				view.tooltip = net.minecraft.client.resources.language.I18n.get("solwarly.book.mixed_flavor") + "\n"
+					+ net.minecraft.client.resources.language.I18n.get("solwarly.book.any_mixed");
 			view.setCenterX(getCenterX() + x);
 			view.setCenterY(getCenterY() + y);
 			children.add(view);

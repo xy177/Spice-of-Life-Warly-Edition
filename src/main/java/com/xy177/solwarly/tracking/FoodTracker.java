@@ -1,97 +1,28 @@
-// Modified by xy177 on 2026-10-10 for Spice of Life Warly Edition; upstream LGPL 2.1.
 package com.xy177.solwarly.tracking;
 
-import com.xy177.solwarly.SOLWarly;
 import com.xy177.solwarly.SOLWarlyConfig;
 import com.xy177.solwarly.diet.*;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.SoundEvents;
-import net.minecraft.util.EnumParticleTypes;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.text.*;
-import net.minecraft.world.WorldServer;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import squeek.applecore.api.food.FoodEvent;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.*;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import static com.xy177.solwarly.lib.Localization.*;
 
-import static com.xy177.solwarly.lib.Localization.localizedComponent;
-import static com.xy177.solwarly.lib.Localization.localizedQuantityComponent;
-
-@Mod.EventBusSubscriber(modid = SOLWarly.MOD_ID)
 public final class FoodTracker {
-	@SubscribeEvent
-	public static void onFoodEaten(FoodEvent.FoodEaten event) {
-		if (event.player.world.isRemote) return;
-		WorldServer world = (WorldServer) event.player.world;
-		
-		EntityPlayer player = event.player;
-		
-		FoodList foodList = FoodList.get(player);
-		DietRuntime.initialize(player);
-		double before = DietRewards.cumulativeHealth(DietCapability.get(player).cumulative());
-		boolean hasTriedNewFood = foodList.addFood(event.food);
-		DietRuntime.eat(player, event.food);
-		
-		// check this before syncing, because the sync entails an hp update
-		MaxHealthHandler.updateFoodHPModifier(player);
-		boolean newMilestoneReached = DietRewards.cumulativeHealth(DietCapability.get(player).cumulative()) > before;
-		
-		CapabilityHandler.syncFoodList(player);
-        boolean finished = DietRewards.reachedFinalCumulativeTier(DietCapability.get(player).cumulative());
-		
-		if (newMilestoneReached) {
-			if (SOLWarlyConfig.shouldPlayMilestoneSounds) {
-				// passing the player makes it not play for some reason
-				world.playSound(
-					null,
-					player.posX, player.posY, player.posZ,
-					SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS,
-					1.0F, 1.0F
-				);
-			}
-			
-			if (SOLWarlyConfig.shouldSpawnMilestoneParticles) {
-				spawnParticles(world, player, EnumParticleTypes.HEART, 12);
-				
-                if (finished) {
-					spawnParticles(world, player, EnumParticleTypes.VILLAGER_HAPPY, 16);
-				}
-			}
-			
-			ITextComponent heartsDescription = localizedQuantityComponent("message", "hearts", (int) ((DietRewards.cumulativeHealth(DietCapability.get(player).cumulative()) - before) / 2));
-			
-			if (SOLWarlyConfig.shouldShowProgressAboveHotbar) {
-                String messageKey = finished ? "finished.hotbar" : "milestone_achieved";
-				player.sendStatusMessage(localizedComponent("message", messageKey, heartsDescription), true);
-			} else {
-				showChatMessage(player, TextFormatting.DARK_AQUA, localizedComponent("message", "milestone_achieved", heartsDescription));
-                if (finished) {
-					showChatMessage(player, TextFormatting.GOLD, localizedComponent("message", "finished.chat"));
-				}
-			}
-		} else if (hasTriedNewFood) {
-			if (SOLWarlyConfig.shouldSpawnIntermediateParticles) {
-				spawnParticles(world, player, EnumParticleTypes.END_ROD, 12);
-			}
-		}
-	}
-	
-	private static void spawnParticles(WorldServer world, EntityPlayer player, EnumParticleTypes type, int count) {
-		// this overload sends a packet to the client
-		world.spawnParticle(
-			type,
-			player.posX, player.posY + player.getEyeHeight(), player.posZ,
-			count,
-			0.5F, 0.5F, 0.5F,
-			0.0F
-		);
-	}
-	
-	private static void showChatMessage(EntityPlayer player, TextFormatting color, ITextComponent message) {
-		ITextComponent component = localizedComponent("message", "chat_wrapper", message);
-		component.setStyle(new Style().setColor(color));
-		player.sendStatusMessage(component, false);
-	}
-	
-	private FoodTracker() {}
+    public static void complete(Player player,ItemStack food) {
+        if(player.level().isClientSide||SOLWarlyConfig.limitProgressionToSurvival()&&player instanceof net.minecraft.server.level.ServerPlayer server&&server.gameMode.getGameModeForPlayer()!=net.minecraft.world.level.GameType.SURVIVAL)return;
+        DietRuntime.initialize(player);DietData data=DietCapability.get(player);
+        double before=DietRewards.cumulativeHealth(data.cumulative());
+        boolean first=FoodList.get(player).addFood(food.getItem());
+        DietRuntime.eat(player,food);CapabilityHandler.syncFoodList(player);
+        double after=DietRewards.cumulativeHealth(data.cumulative());ServerLevel level=(ServerLevel)player.level();
+        if(after>before) {
+            if(SOLWarlyConfig.shouldPlayMilestoneSounds())level.playSound(null,player.blockPosition(),SoundEvents.PLAYER_LEVELUP,SoundSource.PLAYERS,1,1);
+            if(SOLWarlyConfig.shouldSpawnMilestoneParticles())level.sendParticles(ParticleTypes.HEART,player.getX(),player.getEyeY(),player.getZ(),12,.5,.5,.5,0);
+            var hearts=localizedQuantityComponent("message","hearts",(int)((after-before)/2));
+            player.displayClientMessage(localizedComponent("message",DietRewards.reachedFinalCumulativeTier(data.cumulative())?"finished.hotbar":"milestone_achieved",hearts),SOLWarlyConfig.shouldShowProgressAboveHotbar());
+        }else if(first&&SOLWarlyConfig.shouldSpawnIntermediateParticles())level.sendParticles(ParticleTypes.END_ROD,player.getX(),player.getEyeY(),player.getZ(),12,.5,.5,.5,0);
+    }
+    private FoodTracker() {}
 }

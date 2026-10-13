@@ -1,29 +1,32 @@
 package com.xy177.solwarly.lunch;
 
-import net.minecraft.inventory.InventoryCrafting;
-import net.minecraft.item.*;
-import net.minecraft.item.crafting.*;
-import net.minecraft.util.NonNullList;
+import net.minecraft.core.*;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.crafting.CraftingInput;
+import net.minecraft.world.item.*;
+import net.minecraft.world.item.crafting.*;
+import net.minecraft.world.level.Level;
 
-/** Preserve contents and custom item data when upgrading a lunch container. */
-public final class LunchUpgradeRecipe extends ShapedRecipes {
-    private final ItemLunchContainer source;
-
-    public LunchUpgradeRecipe(ItemLunchContainer source, Item metal, ItemLunchContainer target) {
-        super("solwarly:lunch", 3, 3, ingredients(source, metal), new ItemStack(target));
-        this.source = source;
-    }
-    private static NonNullList<Ingredient> ingredients(Item source, Item metal) {
-        Ingredient ingot = Ingredient.fromItem(metal);
-        return NonNullList.from(Ingredient.EMPTY, Ingredient.EMPTY, ingot, Ingredient.EMPTY,
-            ingot, Ingredient.fromItem(source), ingot, ingot, ingot, ingot);
-    }
-    @Override public ItemStack getCraftingResult(InventoryCrafting inventory) {
-        ItemStack result = getRecipeOutput().copy();
-        for (int slot = 0; slot < inventory.getSizeInventory(); slot++) {
-            ItemStack input = inventory.getStackInSlot(slot);
-            if (input.getItem() == source && input.hasTagCompound()) result.setTagCompound(input.getTagCompound().copy());
+public final class LunchUpgradeRecipe extends CustomRecipe {
+    public LunchUpgradeRecipe(CraftingBookCategory category) { super(category); }
+    private ItemStack source(CraftingInput inventory) {
+        if(inventory.width()!=3||inventory.height()!=3)return ItemStack.EMPTY;
+        ItemStack source=inventory.getItem(4);Item metal;
+        if(source.getItem()==LunchRegistry.BAG.get())metal=Items.IRON_INGOT;
+        else if(source.getItem()==LunchRegistry.BOX.get())metal=Items.GOLD_INGOT;else return ItemStack.EMPTY;
+        for(int slot=0;slot<9;slot++) {
+            if(slot==4)continue;
+            if(slot==0||slot==2) { if(!inventory.getItem(slot).isEmpty())return ItemStack.EMPTY; }
+            else if(inventory.getItem(slot).getItem()!=metal)return ItemStack.EMPTY;
         }
-        return result;
+        return source;
     }
+    @Override public boolean matches(CraftingInput inventory,Level level) { return !source(inventory).isEmpty(); }
+    @Override public ItemStack assemble(CraftingInput inventory,net.minecraft.core.HolderLookup.Provider access) {
+        ItemStack source=source(inventory);if(source.isEmpty())return ItemStack.EMPTY;
+        ItemStack result=new ItemStack(source.getItem()==LunchRegistry.BAG.get()?(Item)LunchRegistry.BOX.get():LunchRegistry.GOLD.get());
+        result.applyComponents(source.getComponents());return result;
+    }
+    @Override public boolean canCraftInDimensions(int width,int height) { return width>=3&&height>=3; }
+    @Override public RecipeSerializer<?> getSerializer() { return LunchRegistry.UPGRADE.get(); }
 }
