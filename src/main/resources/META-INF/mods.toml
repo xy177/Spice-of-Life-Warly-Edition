@@ -9,8 +9,11 @@ displayName="Spice of Life Warly Edition"
 authors="xy177"
 displayURL="https://github.com/xy177/Spice-of-Life-Warly-Edition"
 logoFile="assets/solwarly/textures/forge/logo.png"
-credits='''Based on Spice of Life:Carrot Edition
-https://github.com/Cazsius/Spice-of-Life-Carrot-Edition'''
+credits='''Based on Spice of Life: Carrot Edition: Cazsius, Talonos, juliand665 and contributors.
+https://github.com/Cazsius/Spice-of-Life-Carrot-Edition
+Lunch-container textures reused from Spice of Life: Apple Pie Edition (LGPL 2.1).
+https://github.com/txnimc/Spice-of-Life-Apple-Pie
+See THIRD_PARTY_NOTICES.md for original credits, resource sources and inherited licenses.'''
 description="Combines Carrot Edition’s lasting progression with Apple Pie Edition’s dietary diversity. Discover new foods and flavors to build Food Experience, vary your meals for diversity rewards, and grind spices to add flavor and effects to your food."
 
 [[dependencies.solwarly]]
