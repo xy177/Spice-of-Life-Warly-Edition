@@ -87,4 +87,5 @@ Install Warly Edition **in place of Spice of Life: Carrot Edition**; do not inst
 
 ## Credits
 
-Created by **xy177**, based on [Spice of Life: Carrot Edition](https://github.com/Cazsius/Spice-of-Life-Carrot-Edition), with features inspired by [Spice of Life: Apple Pie Edition](https://github.com/txnimc/Spice-of-Life-Apple-Pie).
+This mod is based on [Spice of Life: Carrot Edition](https://github.com/Cazsius/Spice-of-Life-Carrot-Edition).<br>
+Some gameplay mechanics and items are inspired by [Spice of Life: Apple Pie Edition](https://github.com/txnimc/Spice-of-Life-Apple-Pie).
