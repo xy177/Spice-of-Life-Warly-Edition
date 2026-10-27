@@ -1,6 +1,6 @@
-// Modified by xy177 on 2026-10-27 from the carrot book's ProgressGraph layout; upstream LGPL 2.1.
+// Warly reward timeline, implemented by xy177, 2026-10-27; LGPL-2.1.
+// Uses the Apple Pie-derived Page and UI elements; geometry follows Warly's player-facing design.
 package com.xy177.solwarly.client.gui;
-
 import com.xy177.solwarly.client.gui.elements.*;
 import com.xy177.solwarly.item.SOLWarlyItems;
 import net.minecraft.client.resources.language.I18n;
@@ -12,89 +12,67 @@ import java.util.SortedMap;
 import static com.xy177.solwarly.lib.DisplayNumbers.format;
 
 final class RewardPage extends Page {
-    RewardPage(Rectangle frame, String title) {
-        super(frame, title);
+    RewardPage(Rectangle frame,String title) { super(frame,title); }
+    void addProgress(int row,String title,double score,SortedMap<Double,String> rewards,Map<Double,Double> hearts,boolean diversity) {
+        int center=getCenterX(), y=getMinY()+row;
+        if(row>60)label(title,contentWidth,center,y-38,false,null,FoodBookScreen.fullBlack);
+        if(rewards.isEmpty()) { label(I18n.get("solwarly.book.no_rewards"),contentWidth,center,y,false,null,FoodBookScreen.fullBlack);return; }
+        RewardProgress progress=new RewardProgress(score,rewards.keySet());
+        double previous=progress.currentTier==null?0:progress.currentTier;
+        boolean complete=progress.next==null;
+        int start=center-24, end=center+24;
+        double fraction=complete?(score>progress.maximum?1:0):Math.max(0,Math.min(1,(score-previous)/(progress.next-previous)));
+        int position=start+(int)Math.round((end-start)*fraction);
+        String kind=diversity?"diversity":"experience";
+        String currentReward=progress.currentTier==null?I18n.get("solwarly.book.no_reward"):rewards.get(progress.currentTier);
+        if(!diversity)currentReward=I18n.get("solwarly.book.total_hearts",format(hearts.getOrDefault(previous,0.0)));
+        String current=tip(kind,"current",score,currentReward);
+        String highest=tip(kind,"maximum",progress.maximum,rewards.get(progress.maximum));
+        String remaining=complete?I18n.get("solwarly.book.max_rewards"):I18n.get("solwarly.book."+kind+".remaining",format(progress.next-score));
+        UIItemStack icon=new UIItemStack(new ItemStack(SOLWarlyItems.FOOD_BOOK.get()));
+        icon.setCenterX(center-49);icon.setCenterY(y);icon.tooltip=remaining;children.add(icon);
+        line(center-36,position,y,current+"\n"+remaining,FoodBookScreen.fullBlack);
+        if(!complete)line(position,center+36,y,current+"\n"+remaining,FoodBookScreen.leastBlack);
+        if(progress.currentTier==null) {
+            String zero=tip(kind,"previous",0,I18n.get("solwarly.book.no_reward"));
+            label("0",48,start,y-3,true,zero,FoodBookScreen.fullBlack);
+            tick(start,y-3,y,zero,FoodBookScreen.fullBlack);
+        } else node(start,y,previous,true,hearts.getOrDefault(previous,0.0),diversity,
+            complete?highest:tip(kind,"previous",previous,rewards.get(previous)));
+        if(!complete) {
+            node(end,y,progress.next,false,hearts.getOrDefault(progress.next,0.0),diversity,tip(kind,"next",progress.next,rewards.get(progress.next)));
+            UILabel last=new UILabel(format(progress.maximum),20);last.setMinX(center+39);last.setCenterY(y);
+            last.color=FoodBookScreen.leastBlack;last.tooltip=highest;children.add(last);
+        }
+        tick(position,y,y+6,current,FoodBookScreen.fullBlack);
+        label(format(score),48,position,y+9,false,current,FoodBookScreen.fullBlack);
+        line(center-47,center+47,y+22,null,FoodBookScreen.leastBlack);
     }
-
-    void addProgress(int offset, String title, double score, SortedMap<Double, String> totals,
-                     Map<Double, Double> hearts, boolean diversity, double inheritedHearts) {
-        if (offset > 60) {
-            UILabel heading = new UILabel(title, contentWidth);
-            heading.setCenterX(getCenterX()); heading.setMinY(getMinY() + offset - 38); children.add(heading);
-        }
-        RewardProgress progress = new RewardProgress(score, totals.keySet());
-        if (progress.maximum == null) {
-            UILabel empty = new UILabel(I18n.get("solwarly.book.no_rewards"), contentWidth);
-            empty.setCenterX(getCenterX()); empty.setCenterY(getMinY() + offset); children.add(empty);
-            return;
-        }
-        int y = getMinY() + offset, left = getCenterX() - 24, right = getCenterX() + 24;
-        double currentHearts = Math.max(inheritedHearts, progress.currentTier == null ? 0 : hearts.getOrDefault(progress.currentTier, 0.0));
-        String currentReward = diversity
-            ? (progress.currentTier == null ? I18n.get("solwarly.book.no_reward") : totals.get(progress.currentTier))
-            : I18n.get("solwarly.book.total_hearts", format(currentHearts));
-        String kind = diversity ? "diversity" : "experience";
-        double previous = progress.currentTier == null ? 0 : progress.currentTier;
-        boolean maximum = progress.next == null;
-        int current = maximum ? (score > progress.maximum ? right : left)
-            : left + (int) Math.round((right - left) * Math.max(0, Math.min(1, (score - previous) / (progress.next - previous))));
-        String currentTip = tooltip(kind, "current", score, currentReward);
-        String maximumTip = tooltip(kind, "maximum", progress.maximum, totals.get(progress.maximum));
-        String remainingTip = maximum ? I18n.get("solwarly.book.max_rewards")
-            : I18n.get("solwarly.book." + kind + ".remaining", format(progress.next - score));
-        UIItemStack book = new UIItemStack(new ItemStack(SOLWarlyItems.FOOD_BOOK.get()));
-        book.setCenterX(getCenterX() - 49); book.setCenterY(y); book.tooltip = remainingTip; children.add(book);
-        UIElement complete = UIBox.horizontalLine(getCenterX() - 36, current, y, FoodBookScreen.fullBlack);
-        complete.tooltip = currentTip + "\n" + remainingTip; children.add(complete);
-        if (!maximum) {
-            UIElement pending = UIBox.horizontalLine(current, getCenterX() + 36, y, FoodBookScreen.leastBlack);
-            pending.tooltip = currentTip + "\n" + remainingTip; children.add(pending);
-        }
-        if (progress.currentTier == null) {
-            String startTip = tooltip(kind, "previous", 0, I18n.get("solwarly.book.no_reward"));
-            UILabel start = new UILabel("0"); start.setCenterX(left); start.setMaxY(y - 3); start.tooltip = startTip; children.add(start);
-            UIElement startTick = UIBox.verticalLine(left, y - 3, y, FoodBookScreen.fullBlack);
-            startTick.tooltip = startTip; children.add(startTick);
-        } else milestone(left, y, previous, true, hearts.getOrDefault(previous, 0.0), diversity,
-            maximum ? maximumTip : tooltip(kind, "previous", previous, totals.get(previous)));
-        if (!maximum) {
-            milestone(right, y, progress.next, false, hearts.getOrDefault(progress.next, 0.0), diversity,
-                tooltip(kind, "next", progress.next, totals.get(progress.next)));
-            UILabel last = new UILabel(format(progress.maximum), 20); last.color = FoodBookScreen.leastBlack;
-            last.setMinX(getCenterX() + 39); last.setCenterY(y); last.tooltip = maximumTip; children.add(last);
-        }
-        UIElement marker = UIBox.verticalLine(current, y, y + 6, FoodBookScreen.fullBlack);
-        marker.tooltip = currentTip; children.add(marker);
-        UILabel currentLabel = new UILabel(format(score), 48);
-        currentLabel.setCenterX(current); currentLabel.setMinY(y + 9); currentLabel.tooltip = currentTip; children.add(currentLabel);
-
-        children.add(UIBox.horizontalLine(getCenterX() - 47, getCenterX() + 47, y + 22, FoodBookScreen.leastBlack));
+    private String tip(String kind,String stage,double score,String reward) {
+        return I18n.get("solwarly.book."+kind+"."+stage+"_score",format(score))+"\n"
+            +I18n.get("solwarly.book."+kind+"."+stage+"_reward",diversityReward(kind,reward));
     }
-
-    private String tooltip(String kind, String stage, double score, String reward) {
-        return I18n.get("solwarly.book." + kind + "." + stage + "_score", format(score)) + "\n"
-            + I18n.get("solwarly.book." + kind + "." + stage + "_reward", kind.equals("diversity") ? "\n" + reward : reward);
+    private String diversityReward(String kind,String reward) { return kind.equals("diversity")?"\n"+reward:reward; }
+    private UILabel label(String text,int width,int x,int y,boolean above,String tooltip,Color color) {
+        UILabel label=new UILabel(text,width);label.setCenterX(x);if(above)label.setMaxY(y);else label.setMinY(y);
+        label.color=color;label.tooltip=tooltip;children.add(label);return label;
     }
-
-    private void milestone(int x, int y, double score, boolean reached, double hearts, boolean diversity, String tooltip) {
-        Color color = reached ? FoodBookScreen.fullBlack : FoodBookScreen.lessBlack;
-        UILabel label = new UILabel(format(score)); label.color = color;
-        label.setCenterX(x); label.setMaxY(y - 3); label.tooltip = tooltip; children.add(label);
-        UIElement tick = UIBox.verticalLine(x, y - 3, y, color);
-        tick.tooltip = tooltip; children.add(tick);
-        UIStack reward = new UIStack(); reward.spacing = 1;
-        if (diversity) {
-            UIItemStack bottle = new UIItemStack(new ItemStack(Items.EXPERIENCE_BOTTLE));
-            bottle.tooltip = tooltip; reward.addChild(bottle);
-        } else {
-            UIImage heart = new UIImage(FoodBookScreen.heartImage);
-            heart.setSize(11, 11);
-            heart.alpha = reached ? 1 : .5f;
-            reward.addChild(heart);
-            UILabel count = new UILabel("×" + format(hearts)); count.color = color;
-            reward.addChild(count);
+    private void line(int from,int to,int y,String tooltip,Color color) {
+        UIElement line=UIBox.horizontalLine(from,to,y,color);line.tooltip=tooltip;children.add(line);
+    }
+    private void tick(int x,int from,int to,String tooltip,Color color) {
+        UIElement line=UIBox.verticalLine(x,from,to,color);line.tooltip=tooltip;children.add(line);
+    }
+    private void node(int x,int y,double score,boolean earned,double hearts,boolean diversity,String tooltip) {
+        Color color=earned?FoodBookScreen.fullBlack:FoodBookScreen.lessBlack;
+        UILabel value=label(format(score),48,x,y-3,true,tooltip,color);
+        tick(x,y-3,y,tooltip,color);
+        UIStack symbols=new UIStack();symbols.spacing=1;
+        if(diversity)symbols.addChild(new UIItemStack(new ItemStack(Items.EXPERIENCE_BOTTLE)));
+        else {
+            UIImage image=new UIImage(FoodBookScreen.heartImage);image.setSize(11,11);image.alpha=earned?1:.5f;symbols.addChild(image);
+            UILabel amount=new UILabel("×"+format(hearts));amount.color=color;symbols.addChild(amount);
         }
-        reward.setCenterX(x); reward.setMaxY(label.getMinY() - 4); reward.updateFrames();
-        reward.tooltip = tooltip; children.add(reward);
+        symbols.setCenterX(x);symbols.setMaxY(value.getMinY()-4);symbols.updateFrames();symbols.tooltip=tooltip;children.add(symbols);
     }
 }

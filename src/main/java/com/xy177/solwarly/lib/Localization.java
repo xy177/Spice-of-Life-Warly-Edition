@@ -1,7 +1,7 @@
 // Adapted from Spice of Life: Apple Pie Edition; upstream contributors retain copyright.
 // Ported and modified by xy177 on 2026-10-27; LGPL-2.1.
 // Upstream: https://github.com/txnimc/Spice-of-Life-Apple-Pie/blob/2d9de8b8d045b1f9b93940b681c74021d326f207/src/main/java/com/tarinoita/solsweetpotato/lib/Localization.java
-// Warly rules and legacy save/API compatibility are retained; see THIRD_PARTY_NOTICES.md.
+// Warly rules are retained; upstream credits are recorded in THIRD_PARTY_NOTICES.md.
 package com.xy177.solwarly.lib;
 
 import com.xy177.solwarly.SOLWarly;
@@ -16,7 +16,7 @@ public final class Localization {
 
 	/** e.g. keyString("tooltip", "eaten_status.not_eaten_1") -> "tooltip.solapplepie.eatenStatus.not_eaten_1") */
 	public static String keyString(String domain, String path) {
-		return domain + ".solcarrot." + path;
+		return domain + ".solwarly." + path;
 	}
 
 	@OnlyIn(Dist.CLIENT)

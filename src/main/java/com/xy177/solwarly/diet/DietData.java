@@ -7,7 +7,7 @@ import java.util.*;
 
 public final class DietData implements INBTSerializable<CompoundTag> {
     public boolean initialized;
-    public double legacyHealthFloor;
+    private final Set<String> tastedFoods = new LinkedHashSet<>();
     private final Map<String, Double> bases = new LinkedHashMap<>();
     private final Map<String, Double> fractions = new HashMap<>();
     private final Map<String, Set<String>> flavors = new LinkedHashMap<>();
@@ -48,6 +48,7 @@ public final class DietData implements INBTSerializable<CompoundTag> {
     }
 
     public double eat(String food, String flavor, double base, double contribution, int count) {
+        markTasted(food);
         flavor = Seasoning.canonicalFlavor(flavor);
         double gain = 0;
         Set<String> tried = flavors.computeIfAbsent(food, key -> new LinkedHashSet<>());
@@ -61,13 +62,9 @@ public final class DietData implements INBTSerializable<CompoundTag> {
         return gain;
     }
 
-    public void migrateFood(String food, double base) {
-        if (!bases.containsKey(food)) {
-            bases.put(food, base);
-            fractions.put(food, DietConfig.cumulativeFlavorFraction);
-            flavors.put(food, new LinkedHashSet<>(Collections.singleton("plain")));
-        }
-    }
+    public boolean markTasted(String food) { return tastedFoods.add(food); }
+    public boolean hasTastedFood(String food) { return tastedFoods.contains(food) || flavors.containsKey(food); }
+    public Set<String> tastedFoods() { Set<String> result=new LinkedHashSet<>(tastedFoods); result.addAll(flavors.keySet()); return result; }
 
     public void trim(int count) { meals.trim(count); }
     public int mealCount() { return meals.size(); }
@@ -101,9 +98,8 @@ public final class DietData implements INBTSerializable<CompoundTag> {
             .simulateFoodAdd(new Meal(food, flavor, contribution), count, extraFlavor, scale);
     }
 
-    public void reset(boolean clearFloor) {
-        bases.clear(); fractions.clear(); flavors.clear(); meals.clear(); initialized = true;
-        if (clearFloor) legacyHealthFloor = 0;
+    public void reset() {
+        tastedFoods.clear(); bases.clear(); fractions.clear(); flavors.clear(); meals.clear(); initialized = true;
     }
     public void recalculate(java.util.function.ToDoubleFunction<String> coefficient) {
         bases.replaceAll((food, previous) -> {
@@ -115,7 +111,6 @@ public final class DietData implements INBTSerializable<CompoundTag> {
     @Override public CompoundTag serializeNBT() {
         CompoundTag tag = new CompoundTag();
         tag.putInt("version", initialized ? 2 : 0);
-        tag.putDouble("legacyHealthFloor", legacyHealthFloor);
         tag.putByte("warlyOverride", warlyOverride);
         ListTag repeatsTag = new ListTag();
         for (Map.Entry<String, Repeat> entry : repeats.entrySet()) {
@@ -134,6 +129,9 @@ public final class DietData implements INBTSerializable<CompoundTag> {
             entry.put("flavors", tastes); history.add(entry);
         }
         tag.put("history", history);
+        ListTag tasted=new ListTag();
+        for(String food:tastedFoods) tasted.add(StringTag.valueOf(food));
+        tag.put("tastedFoods",tasted);
         ListTag recent = new ListTag();
         for (Meal meal : meals) {
             CompoundTag entry = new CompoundTag();
@@ -145,8 +143,10 @@ public final class DietData implements INBTSerializable<CompoundTag> {
     }
     @Override public void deserializeNBT(CompoundTag tag) {
         bases.clear(); fractions.clear(); flavors.clear(); meals.clear(); repeats.clear();
+        tastedFoods.clear();
+        ListTag tasted=tag.getList("tastedFoods",8);
+        for(int i=0;i<tasted.size();i++)tastedFoods.add(tasted.getString(i));
         initialized = tag.getInt("version") > 0;
-        legacyHealthFloor = tag.getDouble("legacyHealthFloor");
         warlyOverride = tag.contains("warlyOverride") ? tag.getByte("warlyOverride") : -1;
         ListTag repeatsTag = tag.getList("warlyRepeats", 10);
         for (int i = 0; i < repeatsTag.size(); i++) {

@@ -1,7 +1,7 @@
-// Derived from Spice of Life: Carrot Edition; original contributors retain copyright.
-// Modified by xy177 on 2026-10-13 and 2026-10-27 for Spice of Life Warly Edition.
-// Upstream source: https://github.com/Cazsius/Spice-of-Life-Carrot-Edition/blob/37c243c5bcf50d5582ce81596e85b3f465b222a8/src/main/java/com/cazsius/solcarrot/client/gui/FoodBookScreen.java
-// License: LGPL-2.1; see LICENSE.txt and THIRD_PARTY_NOTICES.md.
+// Adapted from Spice of Life: Apple Pie Edition (2d9de8b8d045b1f9b93940b681c74021d326f207); LGPL-2.1.
+// Modified by xy177 on 2026-10-27 for Warly Edition.
+// Upstream: https://github.com/txnimc/Spice-of-Life-Apple-Pie/blob/2d9de8b8d045b1f9b93940b681c74021d326f207/src/main/java/com/tarinoita/solsweetpotato/client/gui/FoodBookScreen.java
+// Earlier shared ancestry and notices are recorded in THIRD_PARTY_NOTICES.md.
 package com.xy177.solwarly.client.gui;
 
 import com.xy177.solwarly.SOLWarly;
@@ -35,10 +35,6 @@ public final class FoodBookScreen extends Screen implements PageFlipButton.Pagea
 	private static final ImageData bookImage = new ImageData(texture,
 		new Rectangle(0, 0, 186, 192)
 	);
-	static final ImageData carrotImage = new ImageData(texture,
-		new Rectangle(0, 240, 16, 16),
-		14, 14
-	);
 	static final ImageData spiderEyeImage = new ImageData(texture,
 		new Rectangle(16, 240, 16, 16),
 		8, 8
@@ -59,21 +55,21 @@ public final class FoodBookScreen extends Screen implements PageFlipButton.Pagea
 		new Rectangle(48, 224, 15, 15),
 		10, 12
 	);
-	
+
 	static final Color fullBlack = Color.BLACK;
 	static final Color lessBlack = new Color(0, 0, 0, 128);
 	static final Color leastBlack = new Color(0, 0, 0, 64);
-	
+
 	private final List<UIElement> elements = new ArrayList<>();
 	private UIImage background;
 	private UILabel pageNumberLabel;
-	
+
 	private PageFlipButton nextPageButton;
 	private PageFlipButton prevPageButton;
-	
+
 	private Player player;
 	private FoodData foodData;
-	
+
 	private final List<Page> pages = new ArrayList<>();
 	private int currentPageNumber = 0;
     private long revision;
@@ -82,36 +78,36 @@ public final class FoodBookScreen extends Screen implements PageFlipButton.Pagea
     private int returnPage;
     private net.minecraft.client.gui.components.Button backButton;
     private List<Page> visiblePages() { return detailPages.isEmpty()?pages:detailPages; }
-	
+
 	public static void open(Player player) {
 		Minecraft.getInstance().setScreen(new FoodBookScreen(player));
 	}
-	
+
 	public FoodBookScreen(Player player) {
 		super(Component.empty());
 		this.player = player;
 	}
-	
+
 	@Override
 	public void init() {
 		super.init();
-		
+
 		foodData = new FoodData(FoodList.get(player),com.xy177.solwarly.diet.DietCapability.get(player));
-		
+
 		background = new UIImage(bookImage);
 		background.setCenterX(width / 2);
 		background.setCenterY(height / 2);
-		
+
 		elements.clear();
-		
+
 		// page number
 		pageNumberLabel = new UILabel("1");
 		pageNumberLabel.setCenterX(background.getCenterX());
 		pageNumberLabel.setMinY(background.getMinY() + 156);
 		elements.add(pageNumberLabel);
-		
+
 		initPages();
-		
+
 		int pageFlipButtonSpacing = 50;
 		prevPageButton = addRenderableWidget(new PageFlipButton(
 			background.getCenterX() - pageFlipButtonSpacing / 2 - PageFlipButton.width,
@@ -125,7 +121,7 @@ public final class FoodBookScreen extends Screen implements PageFlipButton.Pagea
 			PageFlipButton.Direction.FORWARD,
 			this
 		));
-		
+
         backButton=addRenderableWidget(net.minecraft.client.gui.components.Button.builder(Component.translatable("solwarly.book.back"),button->{detailPages.clear();switchToPage(returnPage);}).bounds(background.getCenterX()-45,background.getMinY()+169,90,18).build());
         updateButtonVisibility();
     }
@@ -174,38 +170,38 @@ public final class FoodBookScreen extends Screen implements PageFlipButton.Pagea
 	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
 		renderBackground(graphics);
-		
+
 		UIElement.render(graphics, background, mouseX, mouseY);
-		
+
 		super.render(graphics, mouseX, mouseY, partialTicks);
-		
+
 		if (!pages.isEmpty()) { // might not be loaded yet; race condition
 			// current page
 			UIElement.render(graphics, elements, mouseX, mouseY);
 			UIElement.render(graphics, visiblePages().get(currentPageNumber), mouseX, mouseY);
 		}
 	}
-	
+
 	@Override
 	public void switchToPage(int pageNumber) {
 		if (!isWithinRange(pageNumber)) return;
-		
+
 		currentPageNumber = pageNumber;
 		updateButtonVisibility();
-		
+
 		pageNumberLabel.text = "" + (currentPageNumber + 1);
 	}
-	
+
 	@Override
 	public int getCurrentPageNumber() {
 		return currentPageNumber;
 	}
-	
+
 	@Override
 	public boolean isWithinRange(int pageNumber) {
 		return pageNumber >= 0 && pageNumber < visiblePages().size();
 	}
-	
+
 	private void updateButtonVisibility() {
 		prevPageButton.updateState();
 		nextPageButton.updateState();

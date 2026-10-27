@@ -1,7 +1,7 @@
-// Derived from Spice of Life: Carrot Edition; original contributors retain copyright.
-// Modified by xy177 on 2026-10-13 for Spice of Life Warly Edition.
-// Upstream source: https://github.com/Cazsius/Spice-of-Life-Carrot-Edition/blob/37c243c5bcf50d5582ce81596e85b3f465b222a8/src/main/java/com/cazsius/solcarrot/item/SOLCarrotItems.java
-// License: LGPL-2.1; see LICENSE.txt and THIRD_PARTY_NOTICES.md.
+// Adapted from Spice of Life: Apple Pie Edition (2d9de8b8d045b1f9b93940b681c74021d326f207); LGPL-2.1.
+// Modified by xy177 on 2026-10-27 for Warly Edition.
+// Upstream: https://github.com/txnimc/Spice-of-Life-Apple-Pie/blob/2d9de8b8d045b1f9b93940b681c74021d326f207/src/main/java/com/tarinoita/solsweetpotato/item/SOLSweetPotatoItems.java
+// Earlier shared ancestry and notices are recorded in THIRD_PARTY_NOTICES.md.
 package com.xy177.solwarly.item;
 
 import com.xy177.solwarly.SOLWarly;
@@ -21,15 +21,15 @@ import static net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus.MOD;
 
 @Mod.EventBusSubscriber(modid = SOLWarly.MOD_ID, bus = MOD)
 public final class SOLWarlyItems {
-	private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, "solcarrot");
-	
+	private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, SOLWarly.MOD_ID);
+
 	public static final RegistryObject<Item> FOOD_BOOK = ITEMS.register("food_book", FoodBookItem::new);
-	
+
 	public static void setUp() {
 		var eventBus = FMLJavaModLoadingContext.get().getModEventBus();
 		ITEMS.register(eventBus);
 	}
-	
+
 	@SubscribeEvent
 	public static void buildCreativeTabs(BuildCreativeModeTabContentsEvent event) {
 		if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
