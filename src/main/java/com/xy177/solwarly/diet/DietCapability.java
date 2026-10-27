@@ -17,13 +17,13 @@ import javax.annotation.Nullable;
 public final class DietCapability implements ICapabilitySerializable<CompoundTag> {
     public static final Capability<DietData> TYPE=CapabilityManager.get(new CapabilityToken<>() {});
     private final DietData data=new DietData();
-    private final LazyOptional<DietData> optional=LazyOptional.of(()->data);
+    private LazyOptional<DietData> optional=LazyOptional.of(()->data);
     public static DietData get(Player player) { return player.getCapability(TYPE).orElse(null); }
     @SubscribeEvent public static void attach(AttachCapabilitiesEvent<Entity> event) {
         if(event.getObject() instanceof Player) {
             DietCapability provider=new DietCapability();
             event.addCapability(new ResourceLocation("solwarly:diet"),provider);
-            event.addListener(provider.optional::invalidate);
+            event.addListener(provider::invalidate);
         }
     }
     @Mod.EventBusSubscriber(modid=SOLWarly.MOD_ID,bus=Mod.EventBusSubscriber.Bus.MOD)
@@ -31,8 +31,13 @@ public final class DietCapability implements ICapabilitySerializable<CompoundTag
         @SubscribeEvent public static void register(RegisterCapabilitiesEvent event) { event.register(DietData.class); }
     }
     @Override public <T> LazyOptional<T> getCapability(Capability<T> capability,@Nullable Direction side) {
-        return capability==TYPE ? optional.cast() : LazyOptional.empty();
+        if(capability!=TYPE)return LazyOptional.empty();
+        // Forge revives the original player's capabilities while copying them on respawn.
+        // Its invalidation listeners have already invalidated this handle, but the data remains.
+        if(!optional.isPresent())optional=LazyOptional.of(()->data);
+        return optional.cast();
     }
+    private void invalidate() { optional.invalidate(); }
     @Override public CompoundTag serializeNBT() { return data.serializeNBT(); }
     @Override public void deserializeNBT(CompoundTag tag) { data.deserializeNBT(tag); }
 }
