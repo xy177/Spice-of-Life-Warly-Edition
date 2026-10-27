@@ -313,5 +313,13 @@
   "solwarly.book.grinder.3": "有些材料能单独研磨，也能搭配研磨。没绑定配方时会先转五秒等另一种材料，再开始单独研磨。接通红石则只接受一种原料，并送出二号槽的原料。",
   "solwarly.book.grinder.4": "拿着想制作的调味粉潜行右键，研磨器就会只接受它的原料；空手潜行右键解除绑定。绑定时上方会轮流展示成品与原料。",
   "solwarly.book.grinder.5": "上方和侧面的漏斗能送入原料；下方抽走成品，侧面抽走原料。需要送出的物品和空瓶、空桶会先尝试放进下方漏斗或已配置的管道，放不下才掉在地上。",
-  "item.solwarly.spice.creative.name": "创造模式调味料"
+  "item.solwarly.spice.creative.name": "创造模式调味料",
+  "solwarly.book.combined_accompaniments": "双佐料口味",
+  "solwarly.book.any_accompaniments": "任意两份佐料均可",
+  "solwarly.book.experience.previous_score": "上一级奖励所需分数：%s",
+  "solwarly.book.experience.previous_reward": "上一级阅历奖励：%s",
+  "solwarly.book.diversity.previous_score": "上一级奖励所需分数：%s",
+  "solwarly.book.diversity.previous_reward": "上一级多样性奖励：%s",
+  "solwarly.book.experience.remaining": "距离下一级阅历奖励还需：%s分",
+  "solwarly.book.diversity.remaining": "距离下一级多样性奖励还需：%s分"
 }

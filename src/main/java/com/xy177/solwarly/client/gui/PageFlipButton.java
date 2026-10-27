@@ -1,87 +1,86 @@
-// Derived from Spice of Life: Carrot Edition; original contributors retain copyright.
-// Modified by xy177 on 2026-10-13 for Spice of Life Warly Edition.
-// Upstream source: https://github.com/Cazsius/Spice-of-Life-Carrot-Edition/blob/412fa94a07d93f09378fc0e3393de38eb0099824/src/main/java/com/cazsius/solcarrot/client/gui/PageFlipButton.java
-// License: LGPL-2.1; see LICENSE.txt and THIRD_PARTY_NOTICES.md.
+// Adapted from Spice of Life: Apple Pie Edition; upstream contributors retain copyright.
+// Ported and modified by xy177 on 2026-10-27; LGPL-2.1.
+// Upstream: https://github.com/txnimc/Spice-of-Life-Apple-Pie/blob/2d9de8b8d045b1f9b93940b681c74021d326f207/src/main/java/com/tarinoita/solsweetpotato/client/gui/PageFlipButton.java
+// Warly rules and legacy save/API compatibility are retained; see THIRD_PARTY_NOTICES.md.
 package com.xy177.solwarly.client.gui;
 
 import com.xy177.solwarly.SOLWarly;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.sounds.SoundManager;
-import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
+
+import java.util.function.Supplier;
 
 @OnlyIn(Dist.CLIENT)
 final class PageFlipButton extends Button {
 	private static final ResourceLocation texture = SOLWarly.resourceLocation("textures/gui/food_book.png");
 	public static final int width = 23;
 	public static final int height = 13;
-	
+
 	private final Direction direction;
 	private final Pageable pageable;
-	
+
 	PageFlipButton(int x, int y, Direction direction, Pageable pageable) {
-		super(
-			x, y, width, height,
-			CommonComponents.EMPTY,
-			(button) -> pageable.switchToPage(pageable.getCurrentPageNumber() + direction.distance),
-			DEFAULT_NARRATION
-		);
-		
+		super(x, y, 23, 13, Component.literal(""), (button) -> ((PageFlipButton) button).changePage(), p_253695_ -> Component.literal("Flip Page"));
+
 		this.direction = direction;
 		this.pageable = pageable;
 	}
-	
+
 	@Override
-	protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+	public void renderWidget(GuiGraphics matrices, int mouseX, int mouseY, float partialTicks) {
 		if (!visible) return;
-		
+
 		int textureX = 0;
-		if (isHovered()) {
-			textureX += width;
+
+		boolean isHovered = getX() <= mouseX && mouseX < getX() + width && getY() <= mouseY && mouseY < getY() + height;
+		if (isHovered) {
+			textureX += 23;
 		}
-		
-		int textureY = 192;
-		if (direction == Direction.BACKWARD) {
-			textureY += height;
-		}
-		
-		graphics.blit(texture, getX(), getY(), textureX, textureY, width, height);
+
+		int textureY = direction == Direction.FORWARD ? 192 : 205;
+
+		RenderSystem.setShaderTexture(0, texture);
+		matrices.blit(texture, getX(), getY(), textureX, textureY, 23, 13);
 	}
-	
+
 	public void updateState() {
 		visible = pageable.isWithinRange(pageable.getCurrentPageNumber() + direction.distance);
 	}
-	
+
+	private void changePage() {
+		pageable.switchToPage(pageable.getCurrentPageNumber() + direction.distance);
+	}
+
 	@Override
 	public void playDownSound(SoundManager soundManager) {
 		soundManager.play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1.0F));
 	}
-	
+
 	enum Direction {
 		FORWARD(1),
 		BACKWARD(-1);
-		
+
 		final int distance;
-		
+
 		Direction(int distance) {
 			this.distance = distance;
 		}
 	}
-	
+
 	interface Pageable {
 		void switchToPage(int pageNumber);
-		
+
 		int getCurrentPageNumber();
-		
+
 		boolean isWithinRange(int pageNumber);
 	}
 }

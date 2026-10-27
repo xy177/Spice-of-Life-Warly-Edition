@@ -9,9 +9,20 @@ import java.util.*;
 public final class Seasoning {
     public static final String FOOD_KEY = "SolWarlySeasoning", COMPONENTS = "SpiceComponents";
     public static final String MIXED_FLAVOR = "solwarly:mixed";
+    public static final String COMBINED_ACCOMPANIMENT_FLAVOR = "solwarly:combined_accompaniments";
     private static final String AMOUNTS = "SpiceAmounts", USES = "PowderUses", MIXED = "MixedPowder", BADGES = "SideBadges";
     private static boolean hasData(ItemStack stack) { return stack.has(net.minecraft.core.component.DataComponents.CUSTOM_DATA); }
-    public static String canonicalFlavor(String id) { return id.startsWith(MIXED_FLAVOR + ":") ? MIXED_FLAVOR : id; }
+    /** Merge statistical flavors without changing the food's actual ingredients. */
+    public static String canonicalFlavor(String id) {
+        int separator = id.indexOf('|');
+        String primary = separator < 0 ? id : id.substring(0, separator);
+        if (primary.startsWith(MIXED_FLAVOR + ":")) primary = MIXED_FLAVOR;
+        else if (primary.startsWith("solwarly:meal:")) primary = COMBINED_ACCOMPANIMENT_FLAVOR;
+        if (separator < 0) return primary;
+        String side = id.substring(separator + 1);
+        if (side.startsWith("meal:")) side = "combined_accompaniments";
+        return primary + "|" + side;
+    }
     public static List<SpiceKind> components(ItemStack stack) {
         if (!hasData(stack)) return Collections.emptyList();
         CompoundTag tag = stack.getItem() == SpiceRegistry.spice ? com.xy177.solwarly.item.StackData.get(stack) : com.xy177.solwarly.item.StackData.get(stack).getCompound(FOOD_KEY);
@@ -122,7 +133,8 @@ public final class Seasoning {
         if (powders.contains(SpiceKind.CREATIVE)) powderId = "solwarly:creative";
         double powderMultiplier = powders.isEmpty() ? 0 : mixed(kinds) ? SpiceConfig.mixedMultiplier : powders.get(0).multiplier();
         double sideMultiplier = sides.isEmpty() ? 0 : sideUses(sides) > 1 ? SpiceConfig.accompanimentMultiplier : sides.get(0).multiplier();
-        String id = powders.isEmpty() ? "solwarly:" + identity(sides) : sides.isEmpty() ? powderId : powderId + "|" + identity(sides);
+        String sideId = sides.isEmpty() ? "" : sideUses(sides) > 1 ? "combined_accompaniments" : identity(sides);
+        String id = powders.isEmpty() ? "solwarly:" + sideId : sides.isEmpty() ? powderId : powderId + "|" + sideId;
         return new FlavorAPI.Flavor(id, Math.max(powderMultiplier, sideMultiplier));
     }
     public static double durationScale(int copies) { return durationScale((long) copies); }
@@ -137,7 +149,8 @@ public final class Seasoning {
     public static Collection<ItemStack> variants(ItemStack plainFood) {
         List<ItemStack> result = new ArrayList<>(); List<SpiceKind> sides = new ArrayList<>(), powders = new ArrayList<>();
         for (SpiceKind kind : SpiceKind.all()) if (kind != SpiceKind.CREATIVE && kind.available()) { result.add(apply(plainFood, Collections.singletonList(kind))); if (kind.accompaniment()) sides.add(kind); else powders.add(kind); }
-        if (SpiceConfig.maxAccompaniments >= 2) for (int a = 0; a < sides.size(); a++) for (int b = a; b < sides.size(); b++) result.add(apply(plainFood, Arrays.asList(sides.get(a), sides.get(b))));
+        if (SpiceConfig.maxAccompaniments >= 2 && !sides.isEmpty())
+            result.add(apply(plainFood, Arrays.asList(sides.get(0), sides.get(0))));
         if (!powders.isEmpty()) {
             SeasoningAmounts mixture=SeasoningAmounts.of(Collections.nCopies(SpiceConfig.mixedIngredients,powders.get(0)));
             result.add(apply(plainFood,new SeasoningAmounts(mixture.amounts,1,true,Collections.emptyList())));

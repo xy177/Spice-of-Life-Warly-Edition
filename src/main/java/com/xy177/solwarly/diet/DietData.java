@@ -14,7 +14,7 @@ public final class DietData implements INBTSerializable<CompoundTag> {
     private final Map<String, Double> bases = new LinkedHashMap<>();
     private final Map<String, Double> fractions = new HashMap<>();
     private final Map<String, Set<String>> flavors = new LinkedHashMap<>();
-    private final Deque<Meal> meals = new ArrayDeque<>();
+    private final com.xy177.solwarly.tracking.FoodHistory meals = new com.xy177.solwarly.tracking.FoodHistory();
     private final Map<String, Repeat> repeats = new HashMap<>();
     private byte warlyOverride = -1; // -1 follows the global setting, 0 disables, 1 enables
 
@@ -72,9 +72,9 @@ public final class DietData implements INBTSerializable<CompoundTag> {
         }
     }
 
-    public void trim(int count) { while (meals.size() > count) meals.removeFirst(); }
+    public void trim(int count) { meals.trim(count); }
     public int mealCount() { return meals.size(); }
-    public List<Meal> meals() { return new ArrayList<>(meals); }
+    public List<Meal> meals() { return meals.snapshot(); }
     public boolean hasTried(String food, String flavor) {
         return flavors.getOrDefault(food, Collections.emptySet()).contains(Seasoning.canonicalFlavor(flavor));
     }
@@ -90,26 +90,18 @@ public final class DietData implements INBTSerializable<CompoundTag> {
         return sum;
     }
     public double average() {
-        return average(meals);
+        return meals.averageContribution();
     }
     public double variety(double extraFlavor) {
-        return variety(meals, extraFlavor);
+        return meals.variety(extraFlavor);
     }
-    private static double average(Collection<Meal> meals) {
-        return meals.stream().mapToDouble(meal -> meal.contribution).average().orElse(0);
+    public double diversity(double extraFlavor, double scale) {
+        return meals.foodDiversity(extraFlavor, scale);
     }
-    private static double variety(Collection<Meal> meals, double extraFlavor) {
-        Map<String, Set<String>> types = new HashMap<>();
-        for (Meal meal : meals) types.computeIfAbsent(meal.food, key -> new HashSet<>()).add(meal.flavor);
-        return types.values().stream().mapToDouble(set -> 1 + (set.size() - 1) * extraFlavor).sum();
-    }
-    public double diversity(double extraFlavor, double scale) { return average() * variety(extraFlavor) * scale; }
-    /** Preview a meal without changing history, saved contributions or first-taste opportunities. */
+    /** Preview through the Apple Pie-derived history without changing saved meals or first tastes. */
     public double diversityAfter(String food, String flavor, double contribution, int count, double extraFlavor, double scale) {
-        List<Meal> recent = meals();
-        recent.add(new Meal(food, flavor, contribution));
-        if (recent.size() > count) recent = recent.subList(recent.size() - count, recent.size());
-        return average(recent) * variety(recent, extraFlavor) * scale;
+        return meals
+            .simulateFoodAdd(new Meal(food, flavor, contribution), count, extraFlavor, scale);
     }
 
     public void reset(boolean clearFloor) {
