@@ -1,40 +1,42 @@
 # Spice of Life Warly Edition
 
-Spice of Life Warly Edition is a fork of [Spice of Life: Carrot Edition](https://www.curseforge.com/minecraft/mc-mods/spice-of-life-carrot-edition). Discover new dishes for lasting health rewards, keep your recent meals varied for extra benefits, and add seasonings to give familiar foods new flavors and effects.
+Spice of Life Warly Edition builds on [Spice of Life: Apple Pie Edition](https://www.curseforge.com/minecraft/mc-mods/spice-of-life-apple-pie-edition), adding its own blend of food discovery, dietary variety, and seasoning. Try new dishes for lasting health rewards, keep a varied menu for extra benefits, and give familiar meals a different flavor with powders and accompaniments.
 
-## Two Ways to Enjoy Your Food
+## Good Food, Two Kinds of Progress
 
-- **Culinary Experience** rewards discovery with extra maximum health. Your first taste of a dish earns its full value; trying additional flavors earns a smaller contribution. Plain food counts as a flavor, too.
-- **Diversity** reflects your recent meals. It considers both their contributions and how many different foods you have eaten, providing rewards that change with your diet. Different flavors add variety, though less than entirely different dishes.
-- **Food values** take nutrition and preparation complexity into account. Elaborate, nourishing meals generally contribute more than simple snacks.
+- **Culinary Experience** rewards trying something new. Your first taste of a dish earns its full value; discovering another flavor of that dish earns a smaller contribution. Plain food counts as a flavor, too. Reach milestones to gain extra maximum health.
+- **Diversity** follows your recent meals. Both the meals' contributions and the variety of foods you eat matter. Its rewards change with your diet, so there is a reason to keep a few different dishes on the menu. Extra flavors help, though less than an entirely different food.
+- **Nutrition and preparation** both influence a food's value. A meal with more involved preparation can contribute more than a simple snack. Pack makers can adjust individual food values and rewards.
 
 ## Season, Mix, and Serve
 
-Turn ingredients into seasoning powders with the **Spice Grinding Mill**, then craft a powder together with food to give it a new flavor and additional effects.
+Use the **Spice Grinding Mill** to turn ingredients into seasoning powders, then craft a powder together with food. The food keeps its original identity and gains the seasoning's flavor and effects.
 
-- Different seasonings offer different benefits, including potion effects.
-- Mixed powders combine their ingredients’ effects. Repeating an ingredient can increase its effect level or extend its duration.
-- All mixed powders count as one mixed flavor for dietary tracking, regardless of their ingredients.
-- **Accompaniments**, such as supported cooked rice, add nutrition and effects directly to a dish.
+- **Seasoning powders** offer different benefits, including potion effects. Food tooltips show what your seasoned meal provides.
+- **Mixed powders** combine their ingredients' effects. Repeating an ingredient can raise an effect's level or extend its duration.
+- **Accompaniments**, such as supported cooked rice, add nutrition and effects directly to a dish without first becoming a powder.
+- All mixed powders share one flavor for dietary tracking. Foods with two or more accompaniment servings likewise share one combined-accompaniment flavor; you do not need to try every possible pairing to complete the Food Book.
 
-By default, a food accepts one powder application or up to two accompaniment servings. These limits—and whether powders and accompaniments can coexist—are configurable. Placeable feasts should be divided into edible servings before seasoning.
+By default, each food accepts one powder application or up to two accompaniment servings. Application limits, the number of ingredients in mixed powders, and whether powders and accompaniments can share a dish are configurable. Divide placeable feasts into edible servings before seasoning them.
 
-## A Mill That Works Without a Menu
+## A Mill Without a Menu
 
-The grinding mill accepts ingredients through right-clicking or automation and produces a batch every three seconds once processing begins.
+The grinding mill works through right-clicking and automation:
 
-- Right-click with an ingredient to insert complete recipe batches.
-- Right-click with an empty hand to retrieve ingredients.
-- Feed ingredients from above or the sides, and collect products from below.
-- Sneak-right-click with a powder to bind the mill to its recipes. A rotating preview above the mill shows the product and ingredients; sneak-right-click with an empty hand to clear the binding.
+- Right-click with ingredients to insert complete recipe batches, or with an empty hand to retrieve them.
+- Insert ingredients from above or the sides and collect products from below.
+- Sneak-right-click with a powder to bind the mill to that powder's recipes. A rotating preview above it shows the product and ingredients. Sneak-right-click with an empty hand to clear the binding.
+- Recipes can use one or two ingredients. Redstone forces an unbound mill into single-input operation.
 
-The mill also supports recipes with two ingredients. An unbound mill can be forced into single-input operation with redstone.
+Once processing begins, a batch takes three seconds. If an ingredient fits both a single-input and a two-input recipe, an unbound mill briefly waits for the second ingredient before committing to the single-input recipe. Returned containers and expelled items go into suitable storage below when possible.
 
-## Your Food Book and Lunch Containers
+## Keep Your Discoveries in a Food Book
 
-The **Food Book** keeps your discoveries together: Culinary Experience, Diversity, reward milestones, daily food interests, and lists of foods you have or have not tried. Select an eaten food to see its remaining flavors; foods with every available flavor tasted have their own list.
+Craft a **Food Book** with a book and a carrot. It brings together your progress, current food interests, and foods you have or have not tried.
 
-Three portable containers help keep a varied menu handy:
+Culinary Experience and Diversity milestones share a page. Hover over the progress lines and markers to check your score, rewards, and next target. Select an eaten food to see its remaining flavors; foods with every available flavor tasted move to their own list.
+
+Three lunch containers help you take a varied menu along:
 
 | Container | Storage |
 |---|---:|
@@ -42,36 +44,36 @@ Three portable containers help keep a varied menu handy:
 | Lunchbox | 9 slots |
 | Golden Lunchbox | 14 slots |
 
-Sneak-right-click to open a container. Use it normally to eat the available food predicted to give you the highest Diversity after the meal. Upgrading a container preserves its contents.
+Sneak-right-click to open one. Use it normally to eat the available food predicted to leave you with the highest Diversity. Upgrading a container preserves its contents.
 
 ## A Changing Appetite
 
-At sunrise, the server selects foods that players crave and foods they find boring. Craved foods contribute more to Diversity; boring foods contribute less.
+At sunrise, the server selects foods that players crave and foods they find boring. Craved foods contribute more to Diversity; boring foods contribute less. Recent eating habits influence the selection, with some randomness to keep things interesting.
 
-Recent eating habits influence the selection, while randomness keeps the menu from becoming predictable. Check the Food Book or food tooltips to see the current interests. These interests do not change Culinary Experience gains.
+Check the Food Book or a food's tooltip for today's interests. They affect the contribution of your next meal, not meals already recorded, and do not change Culinary Experience gains.
 
 ## Optional Warly Mode
 
-Want a stronger reason to change your menu? **Warly Mode** is disabled by default.
+Want a stronger reason to change your menu? **Warly Mode** is disabled by default and can be enabled globally or for individual players by an administrator.
 
-When enabled, repeatedly eating the same dish within two in-game days gradually restores less hunger and saturation, takes longer to eat, and contributes less Diversity. Different seasonings share the dish’s repetition history. Leave it alone for two days to reset that history.
+In this mode, repeatedly eating the same dish within two in-game days restores progressively less hunger and saturation, takes longer, and contributes less Diversity. Seasoning a dish differently does not reset its repetition history. Each non-exempt meal restarts the two-day timer; leave that dish alone until the timer expires to start fresh.
 
-Craved foods are exempt and do not extend the repetition timer. Culinary Experience remains unaffected. Administrators can enable the mode globally or override it for individual players.
+Craved foods are exempt: they neither add repetitions nor restart the timer. Sleep advances the timer, while `/time add` does not. Culinary Experience remains unaffected.
 
 ## Getting Started
 
-1. Craft a **Food Book** with a book and a carrot.
-2. Try different foods to build Culinary Experience and establish a varied diet.
-3. Build a **Spice Grinding Mill** and explore the available seasoning recipes.
-4. Pack a lunch container to carry several meals wherever you go.
+1. Make a **Food Book** and try a few different foods.
+2. Build a **Spice Grinding Mill** and explore the seasoning recipes available in your pack.
+3. Craft a powder or accompaniment together with a serving of food, then try the new flavor.
+4. Pack a lunch container to keep several meal choices within reach.
 
-JEI displays grinding and mixed-powder recipes. The modern versions also support EMI.
+**JEI** shows grinding and mixed-powder recipes in all three versions. The 1.20.1 and 1.21.1 versions also support **EMI**.
 
 ## Make It Your Own
 
-Configuration files are grouped under `config/solwarly/`, with English and Chinese descriptions. Adjust rewards, food values, recent-meal tracking, daily interests, Warly Mode, seasoning effects, mixing ingredients, and application limits.
+Configuration files live in `config/solwarly/` and include English and Chinese descriptions. You can adjust rewards, food values, recent-meal tracking, daily food interests, Warly Mode, seasoning effects, mixing ingredients, and application limits. Fixed-interest lists can keep selected foods permanently craved or boring.
 
-You can also define your own seasonings and accompaniments through JSON files. Generated examples provide a starting point.
+JSON files let pack makers add custom seasonings and accompaniments, including their names, food prefixes and suffixes, tooltip text, colors, nutrition, and potion effects as applicable. Start with the generated examples in `custom_spices/` and `custom_accompaniments/` inside the configuration folder.
 
 ## Versions and Integrations
 
@@ -81,9 +83,7 @@ You can also define your own seasonings and accompaniments through JSON files. G
 | 1.20.1 | Forge | — |
 | 1.21.1 | NeoForge | — |
 
-Bring a few other mods into your kitchen and try even more flavors! The tables below count the extra powders, ready-to-use seasonings, and accompaniments they unlock. Each seasoning counts once, however many ways you can make or mix it.
-
-A “+” means you’ll need both mods to enjoy those seasonings.
+Other food mods can bring more flavors to your kitchen. The tables below count the extra powders, ready-to-use seasonings, and accompaniments each integration adds. Each kind counts once, regardless of how many recipes or mixtures use it. A “+” means both mods are needed.
 
 <details>
 <summary>Minecraft 1.12.2 (Forge) — Seasonings from Other Mods</summary>
@@ -132,20 +132,16 @@ A “+” means you’ll need both mods to enjoy those seasonings.
 
 </details>
 
-Install Warly Edition **in place of Spice of Life: Carrot Edition**; do not install both together.
+The integrations listed above are optional, with their own dependencies.
 
 ## Credits
 
-Warly Edition is based on [Spice of Life: Carrot Edition](https://github.com/Cazsius/Spice-of-Life-Carrot-Edition), by Cazsius, Talonos, juliand665, and its contributors, including Mrbysco in the modern upstream. We also retain its credits to Lewis_McReu for coding assistance and Vik for artwork.
+Warly Edition's current food-history and book components are adapted from [Spice of Life: Apple Pie Edition](https://github.com/txnimc/Spice-of-Life-Apple-Pie). Its lunchbag, lunchbox, golden lunchbox, and two lunch-container interface textures are also reused under LGPL 2.1. Thanks to the Apple Pie project and its contributors, including its credits to Vice, tarinoita, Kevun1, and the Carrot Edition team.
 
-Some gameplay and items draw on [Spice of Life: Apple Pie Edition](https://github.com/txnimc/Spice-of-Life-Apple-Pie). Its lunchbag, lunchbox, golden lunchbox, and two lunch-container interface textures are reused under LGPL 2.1. Thanks to the Apple Pie project and its contributors, including the upstream credits to Vice, tarinoita, Kevun1, and the Carrot Edition team.
+See [Third-Party Notices](THIRD_PARTY_NOTICES.md) for the detailed source records, resource credits, modification notices, and the inherited Cyclic/MIT notice.
 
-See [Third-Party Notices](THIRD_PARTY_NOTICES.md) for the original credit records, resource sources, modification records, and the inherited Cyclic/MIT notice.
+## License and Source
 
-## License and Source Code
+Warly Edition is distributed under the [GNU Lesser General Public License v2.1](LICENSE.txt), the license supplied by Apple Pie Edition. Original contributors retain the copyright in their work. The full license, applicable third-party notices, and modification records are included with the project. The software is provided without warranty, as described in those licenses.
 
-Warly Edition is distributed under the [GNU Lesser General Public License v2.1](LICENSE.txt), the same license provided by Carrot Edition and Apple Pie Edition. The original contributors retain the copyright in their work; Warly Edition's modifications are by xy177. The software is provided without warranty, as described in the license.
-
-Browse the source for [Minecraft 1.12.2](https://github.com/xy177/Spice-of-Life-Warly-Edition/tree/main), [Minecraft 1.20.1](https://github.com/xy177/Spice-of-Life-Warly-Edition/tree/1.20.1), or [Minecraft 1.21.1](https://github.com/xy177/Spice-of-Life-Warly-Edition/tree/1.21.1). When redistributing a build, provide its corresponding source and retain the applicable license and attribution notices.
-
-Warly Edition is licensed under the GNU Lesser General Public License v2.1, as are Spice of Life: Carrot Edition and Spice of Life: Apple Pie Edition. For the code and resources reused from these projects, the required attribution, license texts, modification notices, and corresponding source are provided. This mod's use of those upstream materials therefore complies with their licensing terms, with no outstanding licensing issues identified.
+Source code is available for [Minecraft 1.12.2](https://github.com/xy177/Spice-of-Life-Warly-Edition/tree/main), [Minecraft 1.20.1](https://github.com/xy177/Spice-of-Life-Warly-Edition/tree/1.20.1), and [Minecraft 1.21.1](https://github.com/xy177/Spice-of-Life-Warly-Edition/tree/1.21.1). If you redistribute a build, provide its corresponding source and retain the applicable license and attribution notices.
