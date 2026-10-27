@@ -11,7 +11,7 @@ final class DietPage extends Page {
     DietPage(Rectangle frame, String title, List<String> lines) {
         super(frame, title);
         for (String line : lines) {
-            mainStack.addChild(new UILabel(line, frame.width - 42));
+            mainStack.addChild(new UILabel(line, contentWidth));
         }
         updateMainStack();
     }
@@ -41,7 +41,8 @@ final class DietPage extends Page {
         }
         SortedMap<Double, String> experienceTotals = new TreeMap<>();
         cumulative.forEach((tier, hearts) -> experienceTotals.put(tier, I18n.format("solwarly.book.total_hearts", format(hearts))));
-        pages.add(new RewardPage(frame, I18n.format("solwarly.book.cumulative_rewards"), diet.cumulative(), experienceTotals, cumulative, false, diet.legacyHealthFloor / 2));
+        RewardPage rewardPage = new RewardPage(frame, I18n.format("solwarly.book.cumulative_rewards"));
+        rewardPage.addProgress(60, I18n.format("solwarly.book.cumulative_rewards"), diet.cumulative(), experienceTotals, cumulative, false, diet.legacyHealthFloor / 2);
         double score = diet.diversity(DietRuntime.clientExtraFlavor, DietRuntime.clientScale);
         SortedMap<Double, List<String>> rewards = new TreeMap<>();
         Map<Double, Double> health = new HashMap<>();
@@ -65,8 +66,9 @@ final class DietPage extends Page {
                 (potion == null ? parts[1] : I18n.format(potion.getName())) + " " + (Integer.parseInt(parts[2]) + 1));
         }
         SortedMap<Double, String> diversityTotals = new TreeMap<>();
-        rewards.forEach((tier, descriptions) -> diversityTotals.put(tier, String.join(", ", descriptions)));
-        pages.add(new RewardPage(frame, I18n.format("solwarly.book.diversity_rewards"), score, diversityTotals, health, true, 0));
+        rewards.forEach((tier, descriptions) -> diversityTotals.put(tier, String.join("\n", descriptions)));
+        rewardPage.addProgress(128, I18n.format("solwarly.book.diversity_rewards"), score, diversityTotals, health, true, 0);
+        pages.add(rewardPage);
         return pages;
     }
 }

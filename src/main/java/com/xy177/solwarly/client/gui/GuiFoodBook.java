@@ -1,4 +1,4 @@
-// Modified by xy177 on 2026-10-10 for Spice of Life Warly Edition; upstream LGPL 2.1.
+// Modified by xy177 on 2026-10-10 and 2026-10-27 for Spice of Life Warly Edition; upstream LGPL 2.1.
 package com.xy177.solwarly.client.gui;
 
 import com.xy177.solwarly.SOLWarly;
@@ -110,6 +110,8 @@ public final class GuiFoodBook extends GuiScreen {
 		if (foodData.progressInfo.configInfo.shouldShowUneatenFoods) {
 			addPages("uneaten_foods", foodData.uneatenFoods);
 		}
+        currentPageNumber = Math.max(0, Math.min(currentPageNumber, pages.size() - 1));
+        pageNumberLabel.text = Integer.toString(currentPageNumber + 1);
     }
     @Override
     public void updateScreen() {

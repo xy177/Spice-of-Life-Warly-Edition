@@ -10,7 +10,7 @@ final class GrinderGuidePage extends Page {
     static List<Page> pages(Rectangle frame) {
         List<String> lines = new ArrayList<>();
         for (int i = 1; i <= 5; i++) {
-            lines.addAll(fontRenderer.listFormattedStringToWidth(I18n.format("solwarly.book.grinder." + i), frame.width - 62));
+            lines.addAll(fontRenderer.listFormattedStringToWidth(I18n.format("solwarly.book.grinder." + i), Math.max(1, frame.width - 70)));
             lines.add("");
         }
         List<Page> pages = new ArrayList<>();
@@ -19,6 +19,6 @@ final class GrinderGuidePage extends Page {
     }
     @Override protected void render() {
         super.render(); int y = frame.y + 40;
-        for (String line : lines) { fontRenderer.drawString(line, frame.x + 31, y, 0); y += 10; }
+        for (String line : lines) { fontRenderer.drawString(line, frame.x + (frame.width - contentWidth) / 2, y, 0); y += 10; }
     }
 }

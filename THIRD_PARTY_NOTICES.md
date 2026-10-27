@@ -4,11 +4,32 @@ Spice of Life Warly Edition, Minecraft 1.12.2.
 Original upstream contributors retain copyright in their respective work.
 Warly Edition modifications are by xy177. No copyright ownership in upstream work is claimed.
 
+## Current source foundation (2026-10-27)
+
+The recent-food store, food identity and book layout primitives are now adapted from
+Spice of Life: Apple Pie Edition, pinned at commit `2d9de8b8d045b1f9b93940b681c74021d326f207` on its `1.20.1` branch.
+Source: https://github.com/txnimc/Spice-of-Life-Apple-Pie/tree/2d9de8b8d045b1f9b93940b681c74021d326f207
+These modules were ported and modified by xy177 on 2026-10-27 for Warly Edition's
+Forge 1.20.1, NeoForge 1.21.1 and Forge 1.12.2 implementations. The legacy version
+is a backport of these modules, not an official Apple Pie 1.12.2 release.
+
+Apple Pie's food / last-eaten index supplies Warly's primary recent-food storage
+and non-mutating meal preview. Warly's saved per-meal contributions, repeated-meal
+average, flavor grouping and cumulative experience rules are retained; Apple Pie's
+default decay and score formula are not substituted. The lifetime archive and
+legacy capability, health, configuration and API adapters remain compatible with
+existing Warly and Carrot saves. Directly retained older components are identified
+separately below; their copyright and license notices remain in place.
+
+Apple Pie itself inherits earlier work from Sweet Potato, Potato and Carrot Edition.
+This adaptation does not remove those upstream authors' rights or attribution.
+The older lunch-container resource source listed below is also retained.
+
 ## Spice of Life: Carrot Edition
 
 Source: https://github.com/Cazsius/Spice-of-Life-Carrot-Edition/tree/3fbe133834091bbbc73ba0f37cf582d2bb66b10d
 License: GNU Lesser General Public License v2.1; the full text is in LICENSE.txt.
-This version uses the carrot-old source baseline. The 1.12.2 baseline also includes compatibility corrections checked against the upstream 1.8.4 release.
+Earlier revisions used the carrot-old source baseline; retained compatibility components are listed below. The 1.12.2 compatibility layer also includes corrections checked against the upstream 1.8.4 release.
 
 Original upstream author record: Cazsius, Talonos, juliand665.
 
@@ -58,17 +79,17 @@ The following records identify inherited files and resources. Java and build fil
 | `src/main/java/com/xy177/solwarly/client/FoodItemStacks.java` | `carrot-old: src/main/java/com/cazsius/solcarrot/client/FoodItemStacks.java` | Adapted for Warly Edition; modification notice reviewed 2026-10-13. |
 | `src/main/java/com/xy177/solwarly/client/gui/ConfigInfoPage.java` | `carrot-old: src/main/java/com/cazsius/solcarrot/client/gui/ConfigInfoPage.java` | Adapted for Warly Edition; modification notice reviewed 2026-10-13. |
 | `src/main/java/com/xy177/solwarly/client/gui/elements/package-info.java` | `carrot-old: src/main/java/com/cazsius/solcarrot/client/gui/elements/package-info.java` | Adapted for Warly Edition; modification notice reviewed 2026-10-13. |
-| `src/main/java/com/xy177/solwarly/client/gui/elements/UIBox.java` | `carrot-old: src/main/java/com/cazsius/solcarrot/client/gui/elements/UIBox.java` | Adapted for Warly Edition; modification notice reviewed 2026-10-13. |
-| `src/main/java/com/xy177/solwarly/client/gui/elements/UIElement.java` | `carrot-old: src/main/java/com/cazsius/solcarrot/client/gui/elements/UIElement.java` | Adapted for Warly Edition; modification notice reviewed 2026-10-13. |
-| `src/main/java/com/xy177/solwarly/client/gui/elements/UIImage.java` | `carrot-old: src/main/java/com/cazsius/solcarrot/client/gui/elements/UIImage.java` | Adapted for Warly Edition; modification notice reviewed 2026-10-13. |
-| `src/main/java/com/xy177/solwarly/client/gui/elements/UIItemStack.java` | `carrot-old: src/main/java/com/cazsius/solcarrot/client/gui/elements/UIItemStack.java` | Adapted for Warly Edition; modification notice reviewed 2026-10-13. |
-| `src/main/java/com/xy177/solwarly/client/gui/elements/UILabel.java` | `carrot-old: src/main/java/com/cazsius/solcarrot/client/gui/elements/UILabel.java` | Adapted for Warly Edition; modification notice reviewed 2026-10-13. |
-| `src/main/java/com/xy177/solwarly/client/gui/elements/UIStack.java` | `carrot-old: src/main/java/com/cazsius/solcarrot/client/gui/elements/UIStack.java` | Adapted for Warly Edition; modification notice reviewed 2026-10-13. |
+| `src/main/java/com/xy177/solwarly/client/gui/elements/UIBox.java` | `Apple Pie 2d9de8b8d045b1f9b93940b681c74021d326f207: src/main/java/com/tarinoita/solsweetpotato/client/gui/elements/UIBox.java` | Ported and adapted by xy177 on 2026-10-27; Warly rules and legacy compatibility retained. |
+| `src/main/java/com/xy177/solwarly/client/gui/elements/UIElement.java` | `Apple Pie 2d9de8b8d045b1f9b93940b681c74021d326f207: src/main/java/com/tarinoita/solsweetpotato/client/gui/elements/UIElement.java` | Ported and adapted by xy177 on 2026-10-27; Warly rules and legacy compatibility retained. |
+| `src/main/java/com/xy177/solwarly/client/gui/elements/UIImage.java` | `Apple Pie 2d9de8b8d045b1f9b93940b681c74021d326f207: src/main/java/com/tarinoita/solsweetpotato/client/gui/elements/UIImage.java` | Ported and adapted by xy177 on 2026-10-27; Warly rules and legacy compatibility retained. |
+| `src/main/java/com/xy177/solwarly/client/gui/elements/UIItemStack.java` | `Apple Pie 2d9de8b8d045b1f9b93940b681c74021d326f207: src/main/java/com/tarinoita/solsweetpotato/client/gui/elements/UIItemStack.java` | Ported and adapted by xy177 on 2026-10-27; Warly rules and legacy compatibility retained. |
+| `src/main/java/com/xy177/solwarly/client/gui/elements/UILabel.java` | `Apple Pie 2d9de8b8d045b1f9b93940b681c74021d326f207: src/main/java/com/tarinoita/solsweetpotato/client/gui/elements/UILabel.java` | Ported and adapted by xy177 on 2026-10-27; Warly rules and legacy compatibility retained. |
+| `src/main/java/com/xy177/solwarly/client/gui/elements/UIStack.java` | `Apple Pie 2d9de8b8d045b1f9b93940b681c74021d326f207: src/main/java/com/tarinoita/solsweetpotato/client/gui/elements/UIStack.java` | Ported and adapted by xy177 on 2026-10-27; Warly rules and legacy compatibility retained. |
 | `src/main/java/com/xy177/solwarly/client/gui/FoodData.java` | `carrot-old: src/main/java/com/cazsius/solcarrot/client/gui/FoodData.java` | Adapted for Warly Edition; modification notice reviewed 2026-10-13. |
 | `src/main/java/com/xy177/solwarly/client/gui/GuiFoodBook.java` | `carrot-old: src/main/java/com/cazsius/solcarrot/client/gui/GuiFoodBook.java` | Adapted for Warly Edition; modification notice reviewed 2026-10-13. |
 | `src/main/java/com/xy177/solwarly/client/gui/ItemListPage.java` | `carrot-old: src/main/java/com/cazsius/solcarrot/client/gui/ItemListPage.java` | Adapted for Warly Edition; modification notice reviewed 2026-10-13. |
 | `src/main/java/com/xy177/solwarly/client/gui/package-info.java` | `carrot-old: src/main/java/com/cazsius/solcarrot/client/gui/package-info.java` | Adapted for Warly Edition; modification notice reviewed 2026-10-13. |
-| `src/main/java/com/xy177/solwarly/client/gui/Page.java` | `carrot-old: src/main/java/com/cazsius/solcarrot/client/gui/Page.java` | Adapted for Warly Edition; modification notice reviewed 2026-10-13. |
+| `src/main/java/com/xy177/solwarly/client/gui/Page.java` | `Apple Pie 2d9de8b8d045b1f9b93940b681c74021d326f207: src/main/java/com/tarinoita/solsweetpotato/client/gui/Page.java` | Ported and adapted by xy177 on 2026-10-27; Warly rules and legacy compatibility retained. |
 | `src/main/java/com/xy177/solwarly/client/gui/PageFlipButton.java` | `carrot-old: src/main/java/com/cazsius/solcarrot/client/gui/PageFlipButton.java` | Adapted for Warly Edition; modification notice reviewed 2026-10-13. |
 | `src/main/java/com/xy177/solwarly/client/gui/ProgressGraph.java` | `carrot-old: src/main/java/com/cazsius/solcarrot/client/gui/ProgressGraph.java` | Adapted for Warly Edition; modification notice reviewed 2026-10-13. |
 | `src/main/java/com/xy177/solwarly/client/gui/StatListPage.java` | `carrot-old: src/main/java/com/cazsius/solcarrot/client/gui/StatListPage.java` | Adapted for Warly Edition; modification notice reviewed 2026-10-13. |
@@ -93,8 +114,9 @@ The following records identify inherited files and resources. Java and build fil
 | `src/main/java/com/xy177/solwarly/SOLWarly.java` | `carrot-old: src/main/java/com/cazsius/solcarrot/SOLCarrot.java` | Adapted for Warly Edition; modification notice reviewed 2026-10-13. |
 | `src/main/java/com/xy177/solwarly/SOLWarlyConfig.java` | `carrot-old: src/main/java/com/cazsius/solcarrot/SOLCarrotConfig.java` | Adapted for Warly Edition; modification notice reviewed 2026-10-13. |
 | `src/main/java/com/xy177/solwarly/tracking/CapabilityHandler.java` | `carrot-old: src/main/java/com/cazsius/solcarrot/tracking/CapabilityHandler.java` | Adapted for Warly Edition; modification notice reviewed 2026-10-13. |
-| `src/main/java/com/xy177/solwarly/tracking/FoodInstance.java` | `carrot-old: src/main/java/com/cazsius/solcarrot/tracking/FoodInstance.java` | Adapted for Warly Edition; modification notice reviewed 2026-10-13. |
-| `src/main/java/com/xy177/solwarly/tracking/FoodList.java` | `carrot-old: src/main/java/com/cazsius/solcarrot/tracking/FoodList.java` | Adapted for Warly Edition; modification notice reviewed 2026-10-13. |
+| `src/main/java/com/xy177/solwarly/tracking/FoodInstance.java` | `Apple Pie 2d9de8b8d045b1f9b93940b681c74021d326f207: src/main/java/com/tarinoita/solsweetpotato/tracking/FoodInstance.java` | Ported and adapted by xy177 on 2026-10-27; Warly rules and legacy compatibility retained. |
+| `src/main/java/com/xy177/solwarly/tracking/FoodHistory.java` | `Apple Pie 2d9de8b8d045b1f9b93940b681c74021d326f207: src/main/java/com/tarinoita/solsweetpotato/tracking/FoodList.java` | Ported and adapted by xy177 on 2026-10-27; Warly rules and legacy compatibility retained. |
+| `src/main/java/com/xy177/solwarly/tracking/FoodList.java` | `Apple Pie 2d9de8b8d045b1f9b93940b681c74021d326f207: src/main/java/com/tarinoita/solsweetpotato/tracking/FoodList.java` | Ported and adapted by xy177 on 2026-10-27; Warly rules and legacy compatibility retained. |
 | `src/main/java/com/xy177/solwarly/tracking/FoodTracker.java` | `carrot-old: src/main/java/com/cazsius/solcarrot/tracking/FoodTracker.java` | Adapted for Warly Edition; modification notice reviewed 2026-10-13. |
 | `src/main/java/com/xy177/solwarly/tracking/MaxHealthHandler.java` | `carrot-old: src/main/java/com/cazsius/solcarrot/tracking/MaxHealthHandler.java` | Adapted for Warly Edition; modification notice reviewed 2026-10-13. |
 | `src/main/java/com/xy177/solwarly/tracking/package-info.java` | `carrot-old: src/main/java/com/cazsius/solcarrot/tracking/package-info.java` | Adapted for Warly Edition; modification notice reviewed 2026-10-13. |

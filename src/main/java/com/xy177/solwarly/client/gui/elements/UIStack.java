@@ -1,4 +1,7 @@
-// Modified by xy177 on 2026-10-10 for Spice of Life Warly Edition; upstream LGPL 2.1.
+// Adapted from Spice of Life: Apple Pie Edition; upstream contributors retain copyright.
+// Ported and modified by xy177 on 2026-10-27; LGPL-2.1.
+// Upstream: https://github.com/txnimc/Spice-of-Life-Apple-Pie/blob/2d9de8b8d045b1f9b93940b681c74021d326f207/src/main/java/com/tarinoita/solsweetpotato/client/gui/elements/UIStack.java
+// Warly rules and legacy save/API compatibility are retained; see THIRD_PARTY_NOTICES.md.
 package com.xy177.solwarly.client.gui.elements;
 
 import java.awt.*;
@@ -7,20 +10,20 @@ import java.util.List;
 public final class UIStack extends UIElement {
 	public Axis axis = Axis.HORIZONTAL;
 	public int spacing = 1;
-	
+
 	public UIStack() {
 		super(new Rectangle(0, 0));
 	}
-	
+
 	public void addChild(UIElement child) {
 		children.add(child);
 		updateFrames();
 	}
-	
+
 	public List<UIElement> getChildren() {
 		return children;
 	}
-	
+
 	public void updateFrames() {
 		switch (axis) {
 			case HORIZONTAL:
@@ -57,7 +60,7 @@ public final class UIStack extends UIElement {
 				throw new AssertionError();
 		}
 	}
-	
+
 	public enum Axis {
 		HORIZONTAL, VERTICAL
 	}

@@ -1,4 +1,7 @@
-// Modified by xy177 on 2026-10-10 for Spice of Life Warly Edition; upstream LGPL 2.1.
+// Adapted from Spice of Life: Apple Pie Edition; upstream contributors retain copyright.
+// Ported and modified by xy177 on 2026-10-27; LGPL-2.1.
+// Upstream: https://github.com/txnimc/Spice-of-Life-Apple-Pie/blob/2d9de8b8d045b1f9b93940b681c74021d326f207/src/main/java/com/tarinoita/solsweetpotato/client/gui/elements/UIImage.java
+// Warly rendering and compatibility adapters retained; see THIRD_PARTY_NOTICES.md.
 package com.xy177.solwarly.client.gui.elements;
 
 import net.minecraft.client.renderer.GlStateManager;
@@ -10,24 +13,24 @@ import java.awt.*;
 public class UIImage extends UIElement {
 	public Image image;
 	public float alpha = 1;
-	
+
 	public UIImage(Image image) {
 		this(new Rectangle(image.partOfTexture.getSize()), image);
 	}
-	
+
 	public UIImage(Rectangle frame, Image image) {
 		super(frame);
-		
+
 		this.image = image;
 	}
-	
+
 	@Override
 	protected void render() {
 		super.render();
-		
+
 		int imageWidth = image.partOfTexture.width;
 		int imageHeight = image.partOfTexture.height;
-		
+
 		GlStateManager.enableBlend();
 		GlStateManager.color(1, 1, 1, alpha);
 		mc.getTextureManager().bindTexture(image.textureLocation);
@@ -39,11 +42,11 @@ public class UIImage extends UIElement {
 			0
 		);
 	}
-	
+
 	public static class Image {
 		public final ResourceLocation textureLocation;
 		public final Rectangle partOfTexture;
-		
+
 		public Image(ResourceLocation textureLocation, Rectangle partOfTexture) {
 			this.textureLocation = textureLocation;
 			this.partOfTexture = partOfTexture;

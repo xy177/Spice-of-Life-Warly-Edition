@@ -40,9 +40,21 @@ final class ItemListPage extends Page {
 			int y = minY + itemSpacing * ((i / itemsPerRow) % rowsPerPage);
 			
 			UIItemStack view = new UIItemStack(itemStack);
-			if (com.xy177.solwarly.spice.Seasoning.MIXED_FLAVOR.equals(com.xy177.solwarly.api.FlavorAPI.resolve(itemStack).id))
-				view.tooltip = net.minecraft.client.resources.I18n.format("solwarly.book.mixed_flavor") + "\n"
-					+ net.minecraft.client.resources.I18n.format("solwarly.book.any_mixed");
+            java.util.List<com.xy177.solwarly.spice.SpiceKind> kinds = com.xy177.solwarly.spice.Seasoning.components(itemStack);
+            if (com.xy177.solwarly.spice.Seasoning.sideUses(kinds) > 1) {
+                view.tooltip = net.minecraft.client.resources.I18n.format("solwarly.book.combined_accompaniments") + "\n"
+                    + net.minecraft.client.resources.I18n.format("solwarly.book.any_accompaniments");
+                java.util.List<com.xy177.solwarly.spice.SpiceKind> powders = com.xy177.solwarly.spice.Seasoning.powders(kinds);
+                if (!powders.isEmpty()) {
+                    boolean mixed = com.xy177.solwarly.spice.Seasoning.mixed(kinds);
+                    String powderName = mixed ? net.minecraft.client.resources.I18n.format("solwarly.book.mixed_flavor")
+                        : com.xy177.solwarly.spice.Seasoning.material(powders.get(0)).getDisplayName();
+                    view.tooltip = powderName + " + " + view.tooltip;
+                    if (mixed) view.tooltip += "\n" + net.minecraft.client.resources.I18n.format("solwarly.book.any_mixed");
+                }
+            } else if (com.xy177.solwarly.spice.Seasoning.MIXED_FLAVOR.equals(com.xy177.solwarly.api.FlavorAPI.resolve(itemStack).id))
+                view.tooltip = net.minecraft.client.resources.I18n.format("solwarly.book.mixed_flavor") + "\n"
+                    + net.minecraft.client.resources.I18n.format("solwarly.book.any_mixed");
 			view.setCenterX(getCenterX() + x);
 			view.setCenterY(getCenterY() + y);
 			children.add(view);

@@ -1,7 +1,11 @@
-// Modified by xy177 on 2026-10-10 for Spice of Life Warly Edition; upstream LGPL 2.1.
+// Adapted from Spice of Life: Apple Pie Edition; upstream contributors retain copyright.
+// Ported and modified by xy177 on 2026-10-27; LGPL-2.1.
+// Upstream: https://github.com/txnimc/Spice-of-Life-Apple-Pie/blob/2d9de8b8d045b1f9b93940b681c74021d326f207/src/main/java/com/tarinoita/solsweetpotato/client/gui/elements/UILabel.java
+// Warly rules and legacy save/API compatibility are retained; see THIRD_PARTY_NOTICES.md.
 package com.xy177.solwarly.client.gui.elements;
 
 import net.minecraft.client.renderer.GlStateManager;
+
 
 import java.awt.*;
 
@@ -10,56 +14,50 @@ public class UILabel extends UIElement {
 	public TextAlignment alignment = TextAlignment.CENTER;
 	public Color color = Color.BLACK;
 	private float textScale = 1;
-	
+
 	/** sets frame to text size */
 	public UILabel(String text) {
-		this(new Rectangle(fontRenderer.getStringWidth(text) - 1, 7), text);
+		this(new Rectangle(fontRenderer.getStringWidth(text), 7), text);
 	}
 
-	/** Keep complete book labels inside the page, shrinking only text that exceeds its width. */
 	public UILabel(String text, int maxWidth) {
 		this(text);
 		int width = fontRenderer.getStringWidth(text);
-		if (width > maxWidth) {
-			textScale = (float) maxWidth / width;
-			frame.width = maxWidth;
-		}
+		if (width > maxWidth) { textScale = (float) maxWidth / width; frame.width = maxWidth; }
 	}
-	
+
 	public UILabel(Rectangle frame, String text) {
 		super(frame);
 		this.text = text;
 	}
-	
+
 	public UILabel(Rectangle frame) {
 		super(frame);
 	}
-	
+
 	@Override
 	protected void render() {
 		super.render();
-		
-		int textWidth = (int) Math.ceil((fontRenderer.getStringWidth(text) - 1) * textScale);
+
+		int textWidth = (int) Math.ceil((fontRenderer.getStringWidth(text)) * textScale);
 		int x = frame.x + (frame.width - textWidth) * alignment.ordinal / 2;
-		int y = frame.y + (frame.height - 7) / 2;
+		int y = frame.y + (frame.height - (int) Math.ceil(7 * textScale)) / 2;
 		if (color.getTransparency() == Color.TRANSLUCENT) {
 			GlStateManager.enableBlend();
 		}
-		if (textScale == 1) fontRenderer.drawString(text, x, y, color.getRGB());
-		else {
-			GlStateManager.pushMatrix();
-			GlStateManager.translate(x, y, 0);
-			GlStateManager.scale(textScale, textScale, 1);
-			fontRenderer.drawString(text, 0, 0, color.getRGB());
-			GlStateManager.popMatrix();
-		}
+
+		GlStateManager.pushMatrix();
+		GlStateManager.translate(x, y, 0);
+		GlStateManager.scale(textScale, textScale, 1);
+		fontRenderer.drawString(text, 0, 0, color.getRGB());
+		GlStateManager.popMatrix();
 	}
-	
+
 	enum TextAlignment {
 		LEFT(0), CENTER(1), RIGHT(2);
-		
+
 		final int ordinal;
-		
+
 		TextAlignment(int ordinal) {
 			this.ordinal = ordinal;
 		}
