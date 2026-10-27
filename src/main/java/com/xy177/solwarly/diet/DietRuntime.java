@@ -37,26 +37,15 @@ public final class DietRuntime {
         if(!FoodCatalog.isReady())throw new IllegalStateException("Food catalog must be prepared during mod startup");
     }
     public static void initialize(Player player) {
-        DietData data = DietCapability.get(player);
-        if (data == null || data.initialized) return;
-        ensureCatalog();
-        FoodList legacy = FoodList.get(player);
-        for (FoodInstance food : legacy.getEatenFoods()) {
-            if (SOLWarlyConfig.shouldCount(food.item))
-                data.migrateFood(food.encode(), FoodCatalog.coefficient(food.getItemStack()));
-        }
-        if (!legacy.getEatenFoods().isEmpty()) {
-            data.legacyHealthFloor = legacy.getProgressInfo().milestonesAchieved() * 2.0 * SOLWarlyConfig.getHeartsPerMilestone();
-        }
-        net.minecraft.world.entity.ai.attributes.AttributeModifier old = player.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH)
-            .getModifier(MaxHealthHandler.MILESTONE_HEALTH_MODIFIER_ID);
-        if (old != null) data.legacyHealthFloor = Math.max(data.legacyHealthFloor, old.amount() - 2 * (SOLWarlyConfig.getBaseHearts() - 10));
-        data.initialized = true;
+        DietData data=DietCapability.get(player);
+        if(data==null || data.initialized)return;
+        ensureCatalog(); data.initialized=true;
     }
     public static void eat(Player player, net.minecraft.world.item.ItemStack food) {
         if (player.level().isClientSide) return;
         initialize(player);
         String id = FoodCatalog.id(food);
+        DietCapability.get(player).markTasted(id);
         AppetiteData appetite = appetite(player.level());
         appetite.refresh(Math.floorDiv(player.getServer().overworld().getDayTime(), 24000),
             player.getServer().getPlayerCount(), FoodCatalog.candidates(), new java.util.Random(player.level().random.nextLong()));
@@ -136,13 +125,13 @@ public final class DietRuntime {
         tag.putDouble("boringMultiplier", DietConfig.boringMultiplier);
         tag.put("cumulativeRewards", strings(DietConfig.cumulativeRewards));
         tag.put("attributes", strings(DietConfig.attributes)); tag.put("effects", strings(DietConfig.effects));
-        tag.put("legacyRules", com.xy177.solwarly.compat.LegacyRules.snapshot());
+        tag.put("foodRules", SOLWarlyConfig.snapshotRules());
         tag.put("spices", com.xy177.solwarly.spice.SpiceConfig.snapshot());
         tag.put("customSpices", com.xy177.solwarly.spice.CustomSpices.snapshot());
         return tag;
     }
     public static void readSnapshot(Player player, CompoundTag tag) {
-        com.xy177.solwarly.compat.LegacyRules.readSnapshot(tag.getCompound("legacyRules"));
+        SOLWarlyConfig.readRules(tag.getCompound("foodRules"));
         DietCapability.get(player).deserializeNBT(tag.getCompound("diet"));
         clientAppetite.readFromNBT(tag.getCompound("appetite"));
         clientCoefficients.clear();
@@ -173,7 +162,7 @@ public final class DietRuntime {
         for (int i = 0; i < values.length; i++) values[i] = list.getString(i); return values;
     }
     @SubscribeEvent public static void tick(ServerTickEvent.Post event) {
-        
+
         var server=net.neoforged.neoforge.server.ServerLifecycleHooks.getCurrentServer();if(server==null)return;
         var world=server.overworld();if(world==null)return;
         WarlyClockData clock=WarlyClockData.get(world);clock.advance(world);

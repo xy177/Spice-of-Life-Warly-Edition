@@ -9,12 +9,10 @@ displayName="Spice of Life Warly Edition"
 authors="xy177"
 displayURL="https://github.com/xy177/Spice-of-Life-Warly-Edition"
 logoFile="assets/solwarly/textures/forge/logo.png"
-credits='''Based on Spice of Life: Carrot Edition: Cazsius, Talonos, juliand665 and contributors.
-https://github.com/Cazsius/Spice-of-Life-Carrot-Edition
-Lunch-container textures reused from Spice of Life: Apple Pie Edition (LGPL 2.1).
+credits='''Based on Spice of Life: Apple Pie Edition.
 https://github.com/txnimc/Spice-of-Life-Apple-Pie
-See THIRD_PARTY_NOTICES.md for original credits, resource sources and inherited licenses.'''
-description="Combines Carrot Edition’s lasting progression with Apple Pie Edition’s dietary diversity. Discover new foods and flavors to build Food Experience, vary your meals for diversity rewards, and grind spices to add flavor and effects to your food."
+See THIRD_PARTY_NOTICES.md for inherited credits and licenses.'''
+description="Explore new foods and flavors for lasting Food Experience, vary your meals for diversity rewards, and grind spices to season your favorite dishes. Built on Apple Pie Edition."
 
 [[dependencies.solwarly]]
 modId="neoforge"
@@ -36,13 +34,6 @@ type="optional"
 versionRange="[1.1.24,)"
 ordering="AFTER"
 side="CLIENT"
-
-[[mods]]
-modId="solcarrot"
-version="1.16.6"
-displayName="Warly Edition: Carrot Compatibility"
-authors="xy177"
-description="Carrot Edition identity and save compatibility."
 
 [[mixins]]
 config="solwarly.mixins.json"

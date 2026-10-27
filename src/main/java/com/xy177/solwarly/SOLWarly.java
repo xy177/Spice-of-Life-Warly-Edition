@@ -1,7 +1,7 @@
-// Derived from Spice of Life: Carrot Edition; original contributors retain copyright.
-// Modified by xy177 on 2026-10-13 for Spice of Life Warly Edition.
-// Upstream source: https://github.com/Cazsius/Spice-of-Life-Carrot-Edition/blob/412fa94a07d93f09378fc0e3393de38eb0099824/src/main/java/com/cazsius/solcarrot/SOLCarrot.java
-// License: LGPL-2.1; see LICENSE.txt and THIRD_PARTY_NOTICES.md.
+// Adapted from Spice of Life: Apple Pie Edition (2d9de8b8d045b1f9b93940b681c74021d326f207); LGPL-2.1.
+// Modified by xy177 on 2026-10-27 for Warly Edition.
+// Upstream: https://github.com/txnimc/Spice-of-Life-Apple-Pie/blob/2d9de8b8d045b1f9b93940b681c74021d326f207/src/main/java/com/tarinoita/solsweetpotato/SOLSweetPotato.java
+// Earlier shared ancestry and notices are recorded in THIRD_PARTY_NOTICES.md.
 package com.xy177.solwarly;
 
 import com.xy177.solwarly.communication.FoodListMessage;
@@ -17,20 +17,20 @@ import org.apache.logging.log4j.Logger;
 @Mod(SOLWarly.MOD_ID)
 public final class SOLWarly {
 	public static final String MOD_ID = "solwarly";
-	
+
 	public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
-	
+
 	public static ResourceLocation resourceLocation(String path) {
-		return net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("solcarrot",path);
+		return net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(MOD_ID,path);
 	}
-	
+
 	public SOLWarly(net.neoforged.bus.api.IEventBus bus,net.neoforged.fml.ModContainer container) {
 		java.io.File directory=net.neoforged.fml.loading.FMLPaths.CONFIGDIR.get().resolve("solwarly").toFile();
 		directory.mkdirs();
 		SOLWarlyConfig.setUp(container);
 		SOLWarlyItems.setUp(bus);
         com.xy177.solwarly.diet.DietCapability.setUp(bus);
-		
+
 		com.xy177.solwarly.spice.SpiceRegistry.setUp(bus);
 		com.xy177.solwarly.lunch.LunchRegistry.setUp(bus);
         bus.addListener(com.xy177.solwarly.communication.FoodListMessage::register);

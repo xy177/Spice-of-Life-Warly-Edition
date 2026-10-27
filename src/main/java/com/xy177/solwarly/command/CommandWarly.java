@@ -27,7 +27,7 @@ public final class CommandWarly {
         root.then(literal("reload").requires(source->source.hasPermission(2)).executes(context-> {
             DietConfig.load(DietConfig.directory);SpiceConfig.load(DietConfig.directory);GrinderConfig.load(DietConfig.directory);
             BuiltinSpiceRecipes.reload();FoodCatalog.build(false,context.getSource().getServer());
-            context.getSource().getServer().getPlayerList().getPlayers().forEach(player->{DietCapability.get(player).trim(DietConfig.recentCount);FoodList.get(player).invalidateProgressInfo();});
+            context.getSource().getServer().getPlayerList().getPlayers().forEach(player->{DietCapability.get(player).trim(DietConfig.recentCount);});
             context.getSource().getServer().getPlayerList().getPlayers().forEach(CapabilityHandler::syncFoodList);
             context.getSource().getServer().getPlayerList().getPlayers().forEach(player->{
                 var effect=player.getEffect(SpiceKind.SUGAR.potion());
@@ -50,9 +50,7 @@ public final class CommandWarly {
             DietCapability.get(player).recalculate(id->{var stack=FoodCatalog.stack(id);return stack.isEmpty()?Double.NaN:FoodCatalog.coefficient(stack);});
             CapabilityHandler.syncFoodList(player);context.getSource().sendSuccess(()->Component.translatable("solwarly.command.done"),true);return 1;
         })));
-        root.then(literal("reset").requires(source->source.hasPermission(2)).then(argument("player",EntityArgument.player())
-            .then(literal("keep-floor").executes(context->reset(context,false)))
-            .then(literal("clear-floor").executes(context->reset(context,true)))));
+        root.then(literal("reset").requires(source->source.hasPermission(2)).then(argument("player",EntityArgument.player()).executes(context->reset(context))));
         event.getDispatcher().register(root);
     }
     private static int mode(com.mojang.brigadier.context.CommandContext<net.minecraft.commands.CommandSourceStack> context,int value,String mode) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
@@ -60,8 +58,8 @@ public final class CommandWarly {
         String key=mode.equals("warly")?"true":mode.equals("normal")?"false":"default";
         context.getSource().sendSuccess(()->Component.translatable("solwarly.command.mode_set",player.getName(),Component.translatable("solwarly.command.mode."+key)),true);return 1;
     }
-    private static int reset(com.mojang.brigadier.context.CommandContext<net.minecraft.commands.CommandSourceStack> context,boolean floor) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
-        var player=EntityArgument.getPlayer(context,"player");FoodList.get(player).clearFood();DietCapability.get(player).reset(floor);CapabilityHandler.syncFoodList(player);
+    private static int reset(com.mojang.brigadier.context.CommandContext<net.minecraft.commands.CommandSourceStack> context) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        var player=EntityArgument.getPlayer(context,"player");FoodList.get(player).clearFood();DietCapability.get(player).reset();CapabilityHandler.syncFoodList(player);
         context.getSource().sendSuccess(()->Component.translatable("solwarly.command.done"),true);return 1;
     }
     private static int status(net.minecraft.server.level.ServerPlayer player,net.minecraft.commands.CommandSourceStack source) {

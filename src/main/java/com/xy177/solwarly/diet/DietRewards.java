@@ -10,6 +10,25 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public final class DietRewards {
+    private static final ResourceLocation EXPERIENCE_HEALTH=ResourceLocation.fromNamespaceAndPath("solwarly","experience_health");
+    public static void update(Player player) {
+        if(player.level().isClientSide)return;
+        DietRuntime.initialize(player);
+        DietData data=DietCapability.get(player);
+        if(data==null)return;
+        AttributeInstance attribute=player.getAttribute(Attributes.MAX_HEALTH);
+        if(attribute==null)return;
+        AttributeModifier previous=attribute.getModifier(EXPERIENCE_HEALTH);
+        double amount=2.0*(com.xy177.solwarly.SOLWarlyConfig.getBaseHearts()-10)+cumulativeHealth(data.cumulative());
+        if(previous==null || previous.amount()!=amount) {
+            if(previous!=null)attribute.removeModifier(previous);
+            AttributeModifier modifier=new AttributeModifier(EXPERIENCE_HEALTH,amount,AttributeModifier.Operation.ADD_VALUE);
+            attribute.addTransientModifier(modifier);
+        }
+        updateAttributes(player);refreshEffects(player);
+        if(player.getHealth()>player.getMaxHealth())player.setHealth(player.getMaxHealth());
+    }
+
     private static final String PREFIX = "solwarly:diversity:";
     private static final Map<Player, Map<Holder<MobEffect>, MobEffectInstance>> ownedEffects = new WeakHashMap<>();
     public static boolean reachedFinalCumulativeTier(double score) {

@@ -1,6 +1,6 @@
 {
   "sources": [
-    { "type": "minecraft:single", "resource": "solcarrot:items/food_book" },
+    { "type": "minecraft:single", "resource": "solwarly:items/food_book" },
     { "type": "minecraft:single", "resource": "solwarly:items/spice_powder" },
     { "type": "minecraft:single", "resource": "solwarly:items/spice_container_paper" },
     { "type": "minecraft:single", "resource": "solwarly:items/lunchbag" },
