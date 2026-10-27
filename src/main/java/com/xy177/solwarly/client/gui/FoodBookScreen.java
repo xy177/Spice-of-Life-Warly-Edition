@@ -1,5 +1,5 @@
 // Derived from Spice of Life: Carrot Edition; original contributors retain copyright.
-// Modified by xy177 on 2026-10-13 for Spice of Life Warly Edition.
+// Modified by xy177 on 2026-10-13 and 2026-10-27 for Spice of Life Warly Edition.
 // Upstream source: https://github.com/Cazsius/Spice-of-Life-Carrot-Edition/blob/37c243c5bcf50d5582ce81596e85b3f465b222a8/src/main/java/com/cazsius/solcarrot/client/gui/FoodBookScreen.java
 // License: LGPL-2.1; see LICENSE.txt and THIRD_PARTY_NOTICES.md.
 package com.xy177.solwarly.client.gui;
@@ -143,6 +143,8 @@ public final class FoodBookScreen extends Screen implements PageFlipButton.Pagea
         if(foodData.completeFoods.isEmpty())pages.add(new DietPage(background.frame,title,List.of(net.minecraft.client.resources.language.I18n.get("solwarly.book.none"))));
         else pages.addAll(ItemListPage.pages(background.frame,title,foodData.completeFoods));
         if(SOLWarlyConfig.shouldShowUneatenFoods())addPages("uneaten_foods",foodData.uneatenFoods);
+        currentPageNumber=Math.max(0,Math.min(currentPageNumber,pages.size()-1));
+        pageNumberLabel.text=Integer.toString(currentPageNumber+1);
     }
     private void addDailyFoods(String key,java.util.Set<String> ids) {
         List<ItemStack> stacks=ids.stream().map(com.xy177.solwarly.diet.FoodCatalog::stack).filter(stack->!stack.isEmpty()&&SOLWarlyConfig.shouldCount(stack.getItem())).toList();

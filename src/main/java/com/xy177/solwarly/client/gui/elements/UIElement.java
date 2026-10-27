@@ -1,173 +1,173 @@
-// Derived from Spice of Life: Carrot Edition; original contributors retain copyright.
-// Modified by xy177 on 2026-10-13 for Spice of Life Warly Edition.
-// Upstream source: https://github.com/Cazsius/Spice-of-Life-Carrot-Edition/blob/37c243c5bcf50d5582ce81596e85b3f465b222a8/src/main/java/com/cazsius/solcarrot/client/gui/elements/UIElement.java
-// License: LGPL-2.1; see LICENSE.txt and THIRD_PARTY_NOTICES.md.
+// Adapted from Spice of Life: Apple Pie Edition; upstream contributors retain copyright.
+// Ported and modified by xy177 on 2026-10-27; LGPL-2.1.
+// Upstream: https://github.com/txnimc/Spice-of-Life-Apple-Pie/blob/2d9de8b8d045b1f9b93940b681c74021d326f207/src/main/java/com/tarinoita/solsweetpotato/client/gui/elements/UIElement.java
+// Warly rules and legacy save/API compatibility are retained; see THIRD_PARTY_NOTICES.md.
 package com.xy177.solwarly.client.gui.elements;
 
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.FormattedText;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 import javax.annotation.Nullable;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static java.util.Collections.singletonList;
 
 @OnlyIn(Dist.CLIENT)
 public abstract class UIElement {
-	public static void render(GuiGraphics graphics, UIElement element, int mouseX, int mouseY) {
-		render(graphics, singletonList(element), mouseX, mouseY);
+	public static void render(GuiGraphics matrices, UIElement element, int mouseX, int mouseY) {
+		render(matrices, singletonList(element), mouseX, mouseY);
 	}
-	
-	public static void render(GuiGraphics graphics, List<UIElement> elements, int mouseX, int mouseY) {
-		elements.forEach(element -> element.render(graphics));
-		
+
+	public static void render(GuiGraphics matrices, List<UIElement> elements, int mouseX, int mouseY) {
+		elements.forEach(element -> element.render(matrices));
+
 		elements.stream()
 			.flatMap(UIElement::getRecursiveChildren)
 			.filter(element -> element.hasTooltip() && element.frame.contains(mouseX, mouseY))
 			.reduce((one, two) -> two) // last element was rendered last and is thus visually on top
-			.ifPresent(element -> element.renderTooltip(graphics, mouseX, mouseY));
+			.ifPresent(element -> element.renderTooltip(matrices, mouseX, mouseY));
 	}
-	
+
 	protected static final Minecraft mc = Minecraft.getInstance();
 	protected static final Font font = mc.font;
-	
+
 	public Rectangle frame;
 	@Nullable
 	public String tooltip;
 	protected final List<UIElement> children = new ArrayList<>();
-	
+
 	public UIElement(Rectangle frame) {
 		this.frame = frame;
 	}
-	
+
 	/**
 	 Renders the element to the screen. Note that no transforms have been applied, so you should take your position into account!
 	 */
-	protected void render(GuiGraphics graphics) {
-		children.forEach(child -> child.render(graphics));
+	protected void render(GuiGraphics matrices) {
+		children.forEach(child -> child.render(matrices));
 	}
-	
+
 	private Stream<UIElement> getRecursiveChildren() {
 		return Stream.concat(
 			Stream.of(this),
 			children.stream().flatMap(UIElement::getRecursiveChildren)
 		);
 	}
-	
+
 	/**
-	 @return whether the element has a tooltip. This is used to determine which of multiple overlapping tooltips to render.
+	 @return whether or not the element has a tooltip. This is used to determine which of multiple overlapping tooltips to render.
 	 */
 	protected boolean hasTooltip() {
 		return tooltip != null;
 	}
-	
+
 	/**
 	 Renders the tooltip at the given position.
-	 
+
 	 @param mouseX the mouse's x position
 	 @param mouseY the mouse's y position
 	 */
-	protected void renderTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
+	protected void renderTooltip(GuiGraphics matrices, int mouseX, int mouseY) {
 		if (tooltip == null) return;
-		
-		renderTooltip(graphics, ItemStack.EMPTY, java.util.Arrays.stream(tooltip.split("\n")).map(Component::literal).toList(), mouseX, mouseY);
+
+		renderTooltip(matrices, ItemStack.EMPTY, java.util.Arrays.stream(tooltip.split("\n")).map(value -> (Component) Component.literal(value)).toList(), mouseX, mouseY);
 	}
-	
+
 	/**
 	 Renders a tooltip at the given position.
-	 
+
 	 @param itemStack an item stack (possibly empty/none) that is the subject of the tooltip
 	 @param tooltip the tooltip contents
 	 @param mouseX the mouse's x position
 	 @param mouseY the mouse's y position
 	 */
-	protected final void renderTooltip(GuiGraphics graphics, ItemStack itemStack, List<? extends FormattedText> tooltip, int mouseX, int mouseY) {
-		graphics.renderComponentTooltip(font, tooltip, mouseX, mouseY, itemStack);
+	protected final void renderTooltip(GuiGraphics matrices, ItemStack itemStack, List<Component> tooltip, int mouseX, int mouseY) {
+		assert mc.screen != null;
+
+		matrices.renderComponentTooltip(mc.font, tooltip, mouseX, mouseY, itemStack);
 	}
-	
+
 	/** calculates and sets the frame to the smallest rectangle enclosing all children's frames */
 	protected void calculateFrameFromChildren() {
 		setMinX(children.stream().mapToInt(UIElement::getMinX).min().orElse(getMinX()));
 		setWidth(children.stream().mapToInt(UIElement::getMaxX).max().orElse(getMaxX()) - getMinX());
-		
+
 		setMinY(children.stream().mapToInt(UIElement::getMinY).min().orElse(getMinY()));
 		setHeight(children.stream().mapToInt(UIElement::getMaxY).max().orElse(getMaxY()) - getMinY());
 	}
-	
+
 	public final int getCenterX() {
 		return frame.x + frame.width / 2;
 	}
-	
+
 	public final void setCenterX(int centerX) {
 		frame.setLocation(centerX - frame.width / 2, frame.y);
 	}
-	
+
 	public final int getCenterY() {
 		return frame.y + frame.height / 2;
 	}
-	
+
 	public final void setCenterY(int centerY) {
 		frame.setLocation(frame.x, centerY - frame.height / 2);
 	}
-	
+
 	public final int getMinX() {
 		return frame.x;
 	}
-	
+
 	public final void setMinX(int minX) {
 		frame.setLocation(minX, frame.y);
 	}
-	
+
 	public final int getMinY() {
 		return frame.y;
 	}
-	
+
 	public final void setMinY(int minY) {
 		frame.setLocation(frame.x, minY);
 	}
-	
+
 	public final int getMaxX() {
 		return frame.x + frame.width;
 	}
-	
+
 	public final void setMaxX(int maxX) {
 		frame.setLocation(maxX - frame.width, frame.y);
 	}
-	
+
 	public final int getMaxY() {
 		return frame.y + frame.height;
 	}
-	
+
 	public final void setMaxY(int maxY) {
 		frame.setLocation(frame.x, maxY - frame.height);
 	}
-	
+
 	public final int getWidth() {
 		return frame.width;
 	}
-	
+
 	public final void setWidth(int width) {
 		frame.width = width;
 	}
-	
+
 	public final int getHeight() {
 		return frame.height;
 	}
-	
+
 	public final void setHeight(int height) {
 		frame.height = height;
 	}
-	
+
 	public final void setSize(int width, int height) {
 		setWidth(width);
 		setHeight(height);

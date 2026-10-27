@@ -313,5 +313,13 @@
   "solwarly.book.grinder.3": "Some ingredients have both solo and paired recipes. An unbound mill turns for five seconds to wait for a partner before grinding solo. Redstone forces a single input and sends the second slot out.",
   "solwarly.book.grinder.4": "Sneak-right-click with a spice to bind its recipes, or with an empty hand to unbind. A bound mill shows rotating previews of the result and ingredients above it.",
   "solwarly.book.grinder.5": "Hoppers above or beside the mill insert ingredients. The bottom extracts products; the sides extract ingredients. Sent-out items and empty containers go to a hopper or configured pipe below first, and drop only if they cannot fit.",
-  "item.solwarly.spice.creative.name": "Creative Mode Seasoning"
+  "item.solwarly.spice.creative.name": "Creative Mode Seasoning",
+  "solwarly.book.combined_accompaniments": "Double Accompaniment Flavor",
+  "solwarly.book.any_accompaniments": "Any two accompaniments count as this flavor.",
+  "solwarly.book.experience.previous_score": "Previous reward target: %s",
+  "solwarly.book.experience.previous_reward": "Previous experience reward: %s",
+  "solwarly.book.diversity.previous_score": "Previous reward target: %s",
+  "solwarly.book.diversity.previous_reward": "Previous diversity reward: %s",
+  "solwarly.book.experience.remaining": "%s points to the next experience reward",
+  "solwarly.book.diversity.remaining": "%s points to the next diversity reward"
 }

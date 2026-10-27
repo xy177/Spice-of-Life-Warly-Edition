@@ -16,7 +16,7 @@ final class GrinderGuidePage extends Page {
         var font = Minecraft.getInstance().font;
         var lines = new ArrayList<FormattedCharSequence>();
         for (int i = 1; i <= 5; i++) {
-            lines.addAll(font.split(Component.translatable("solwarly.book.grinder." + i), frame.width - 62));
+            lines.addAll(font.split(Component.translatable("solwarly.book.grinder." + i), Math.max(1, frame.width - 70)));
             lines.add(FormattedCharSequence.EMPTY);
         }
         var pages = new ArrayList<Page>();
@@ -26,6 +26,6 @@ final class GrinderGuidePage extends Page {
     @Override protected void render(GuiGraphics graphics) {
         super.render(graphics);
         int y = frame.y + 40;
-        for (var line : lines) { graphics.drawString(Minecraft.getInstance().font, line, frame.x + 31, y, 0xFF000000, false); y += 10; }
+        for (var line : lines) { graphics.drawString(Minecraft.getInstance().font, line, frame.x + (frame.width - contentWidth) / 2, y, 0xFF000000, false); y += 10; }
     }
 }
