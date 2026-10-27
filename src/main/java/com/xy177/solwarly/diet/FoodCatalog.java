@@ -2,7 +2,7 @@ package com.xy177.solwarly.diet;
 
 import com.xy177.solwarly.SOLWarly;
 import com.xy177.solwarly.tracking.FoodInstance;
-import com.xy177.solwarly.tracking.ProgressInfo;
+import com.xy177.solwarly.diet.FoodRules;
 import net.minecraft.item.*;
 import net.minecraft.item.crafting.*;
 import net.minecraftforge.common.config.Configuration;
@@ -27,7 +27,7 @@ public final class FoodCatalog {
     }
     public static Collection<String> candidates() {
         List<String> result = new ArrayList<>();
-        ProgressInfo.ConfigInfo rules = new ProgressInfo.ConfigInfo();
+        FoodRules rules = FoodRules.local();
         for (Map.Entry<String, ItemStack> entry : foods.entrySet())
             if (rules.shouldCount(entry.getValue()) && !Arrays.asList(DietConfig.excludedInterest).contains(entry.getKey()))
                 result.add(entry.getKey());

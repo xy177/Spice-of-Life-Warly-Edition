@@ -1,4 +1,7 @@
-// Modified by xy177 on 2026-10-10 for Spice of Life Warly Edition; upstream LGPL 2.1.
+// Adapted from Spice of Life: Apple Pie Edition (2d9de8b8d045b1f9b93940b681c74021d326f207); LGPL-2.1.
+// Modified by xy177 on 2026-10-27 for Warly Edition.
+// Upstream: https://github.com/txnimc/Spice-of-Life-Apple-Pie/blob/2d9de8b8d045b1f9b93940b681c74021d326f207/src/main/java/com/tarinoita/solsweetpotato/SOLSweetPotato.java
+// Earlier shared ancestry and notices are recorded in THIRD_PARTY_NOTICES.md.
 package com.xy177.solwarly;
 
 import com.xy177.solwarly.command.CommandFoodList;
@@ -22,33 +25,27 @@ import org.apache.logging.log4j.Logger;
 )
 public final class SOLWarly {
 	public static final String MOD_ID = "solwarly";
-	public static final String LEGACY_ID = "solcarrot";
-	
+
 	public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
-	
+
 	@Mod.Instance(MOD_ID)
 	public static SOLWarly instance;
 
     public SOLWarly() {
-        // Forge loads @Config before preInit: migrate the legacy file before that happens.
+        // Forge loads @Config before preInit, so prepare the configuration directory here.
         ConfigFiles.prepare(net.minecraftforge.fml.common.Loader.instance().getConfigDir());
     }
-	
+
 	public static ResourceLocation resourceLocation(String path) {
-		// Existing registry and resource names are part of the replacement contract.
-		return new ResourceLocation(LEGACY_ID, path);
+		// Warly owns its items, packets and resources.
+		return new ResourceLocation(MOD_ID, path);
 	}
-	
+
 	public static String namespaced(String path) {
-		return LEGACY_ID + "." + path;
+		return MOD_ID + "." + path;
 	}
-	
-	@EventHandler
-	public static void onFingerprintViolation(FMLFingerprintViolationEvent event) {
-		// This complains if jar not signed, even if certificateFingerprint is blank
-		LOGGER.warn("Invalid Fingerprint!");
-	}
-	
+
+
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent e) {
         java.io.File directory = ConfigFiles.prepare(e.getModConfigurationDirectory());
@@ -57,18 +54,18 @@ public final class SOLWarly {
         com.xy177.solwarly.spice.SpiceConfig.load(directory);
 		MinecraftForge.EVENT_BUS.post(new PreInitializationEvent());
 	}
-	
+
 	@EventHandler
 	public void init(FMLInitializationEvent e) {
 		MinecraftForge.EVENT_BUS.post(new InitializationEvent());
 	}
-	
+
 	@EventHandler
 	public void postInit(FMLPostInitializationEvent e) {
 		MinecraftForge.EVENT_BUS.post(new PostInitializationEvent());
 		com.xy177.solwarly.diet.FoodCatalog.build();
 	}
-	
+
 	@EventHandler
 	public void serverLoad(FMLServerStartingEvent event) {
 		if (!com.xy177.solwarly.diet.FoodCatalog.isReady()) com.xy177.solwarly.diet.FoodCatalog.build();
@@ -79,10 +76,10 @@ public final class SOLWarly {
 	public void serverStopped(FMLServerStoppedEvent event) {
 		com.xy177.solwarly.diet.FoodCatalog.invalidate();
 	}
-	
+
 	public static final class PreInitializationEvent extends Event {}
-	
+
 	public static final class InitializationEvent extends Event {}
-	
+
 	public static final class PostInitializationEvent extends Event {}
 }

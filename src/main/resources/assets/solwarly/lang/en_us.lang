@@ -1,3 +1,80 @@
+# Tooltips
+# Commands
+# Messages
+# Items
+# GUIs
+# Config GUI
+tooltip.solwarly.hearty.not_eaten=Not yet eaten! What does it taste like?
+tooltip.solwarly.hearty.eaten=Eaten: Assisted in adding hearts
+tooltip.solwarly.cheap.eaten=Eaten: No noticeable effect
+tooltip.solwarly.cheap=This food is not nourishing enough to improve your health.
+tooltip.solwarly.disabled.blacklist=This food is in the blacklist and thus cannot improve your health.
+tooltip.solwarly.disabled.whitelist=This food is not in the whitelist and thus cannot improve your health.
+tooltip.solwarly.disabled.eaten=Eaten: No noticeable effect
+command.solwarly.foodlist.size.usage=/foodlist size [player]
+command.solwarly.foodlist.clear.usage=/foodlist clear [player]
+command.solwarly.foodlist.sync.usage=/foodlist sync [player]
+command.solwarly.foodlist.no_permissions=You do not have the permissions necessary to apply this command to other players!
+command.solwarly.foodlist.size.desc.foods_eaten.singular=You've eaten one unique food!
+command.solwarly.foodlist.size.desc.foods_eaten.plural=You've eaten %s unique foods!
+command.solwarly.foodlist.clear.success=Food list reset!
+command.solwarly.foodlist.sync.success=Food list synchronized!
+message.solwarly.chat_wrapper=[SoL: Warly] %s
+message.solwarly.hearts.singular=a heart
+message.solwarly.hearts.plural=%s hearts
+message.solwarly.milestone_achieved=What a unique flavor! You've gained %s!
+message.solwarly.finished.chat=Your desire to seek unique foods is finally satisfied.
+message.solwarly.finished.hotbar=You've gained %s. Your desire to seek unique foods is finally satisfied.
+item.solwarly.food_book.name=Food Book
+gui.solwarly.food_book.stats=Overview
+gui.solwarly.food_book.eaten_foods=Already Tasted: %s
+gui.solwarly.food_book.uneaten_foods=Not Yet Tried: %s
+gui.solwarly.food_book.config=Configuration
+gui.solwarly.food_book.fraction=%1$s/%2$s
+gui.solwarly.food_book.config.minimum_food_value=Minimum Food Value
+gui.solwarly.food_book.config.tooltip.minimum_food_value=The minimum hunger value foods need to provide in order to count towards milestones.
+gui.solwarly.food_book.config.hearty_fraction=Nourishing Foods
+gui.solwarly.food_book.config.tooltip.hearty_fraction=Out of %1$s foods, %2$s are nourishing enough to improve your health.
+gui.solwarly.food_book.config.eaten_cheap_foods=Boring Foods Tasted
+gui.solwarly.food_book.config.tooltip.eaten_cheap_foods=Out of the %1$s foods that aren't nourishing enough to improve your health, you've eaten %2$s.
+gui.solwarly.food_book.config.blacklist=Blacklisted Foods
+gui.solwarly.food_book.config.whitelist=Whitelisted Foods
+gui.solwarly.food_book.config.tooltip.blacklist=How many foods have been disabled by the blacklist.
+gui.solwarly.food_book.config.tooltip.whitelist=How many foods the whitelist allows.
+config.solwarly.base_hearts=Base Hearts
+config.solwarly.is_food_tooltip_enabled=Enable Food Tooltip
+config.solwarly.should_show_progress_above_hotbar=Show Progress Above Hotbar
+config.solwarly.should_show_uneaten_foods=Show Uneaten Foods
+config.solwarly.should_play_milestone_sounds=Enable Milestone Sounds
+config.solwarly.should_spawn_intermediate_particles=Enable Intermediate Particles
+config.solwarly.should_spawn_milestone_particles=Enable Milestone Particles
+config.solwarly.food_blacklist=Blacklist
+config.solwarly.food_whitelist=Whitelist (disables blacklist)
+config.solwarly.minimum_food_value=Minimum Food Value
+config.solwarly.reset_on_death=Reset on Death
+solwarly.interest.1=Craved
+solwarly.interest.0=Ordinary
+solwarly.interest.-1=Unappealing
+solwarly.tooltip.base=Base coefficient: %.2f
+solwarly.tooltip.next=Next first-taste gain: %.2f
+solwarly.tooltip.contribution=Diversity contribution: %s
+solwarly.book.stats=Dietary Progress
+solwarly.book.cumulative=Culinary Experience: %s
+solwarly.book.diversity=Diversity: %s
+solwarly.book.meals=Recent meals: %s/%s
+solwarly.book.average=Average contribution: %s
+solwarly.book.variety=Effective variety: %s
+solwarly.book.craved=Craved
+solwarly.book.boring=Unappealing
+solwarly.book.none=No matching foods
+solwarly.book.cumulative_rewards=Culinary Experience Rewards
+solwarly.book.cumulative_reward=%s experience: +%s hearts
+solwarly.book.diversity_rewards=Diversity Rewards
+solwarly.command.usage=/solwarly status [player] | reload | regenerate <food@metadata> | recalculate [player] | reset <player> | mode <player> <true|false|default>
+solwarly.command.regenerate_usage=/solwarly regenerate <food@metadata> overwrites the coefficient of this food only.
+solwarly.command.reset_usage=/solwarly reset <player>
+solwarly.command.status=%s: Culinary Experience %s, diversity %s, recent meals %s
+solwarly.command.done=Dietary data updated.
 tile.solwarly.spice_grinder.name=Spice Grinding Mill
 item.solwarly.spice.name=Spice
 item.solwarly.spice.mixed.name=Mixed Spice Powder
@@ -156,7 +233,6 @@ solwarly.jei.mixing=Mixed Spice Powder
 solwarly.jei.seconds=3 seconds per batch
 solwarly.jei.star_returned=Nether star returned
 solwarly.jei.not_consumed=Not consumed
-
 solwarly.book.total_hearts=Extra health: %s hearts
 solwarly.book.max_rewards=Highest reward tier reached
 solwarly.book.until_next=%s more until the next milestone
@@ -182,7 +258,6 @@ solwarly.book.diversity.next_score=Score required for the next reward: %s
 solwarly.book.diversity.next_reward=Next Diversity reward: %s
 solwarly.book.diversity.maximum_score=Score required for the highest reward: %s
 solwarly.book.diversity.maximum_reward=Highest Diversity reward: %s
-
 item.solwarly.lunchbag.name=Lunchbag
 item.solwarly.lunchbox.name=Lunchbox
 item.solwarly.golden_lunchbox.name=Golden Lunchbox
@@ -194,7 +269,6 @@ solwarly.command.mode_set=Changed %s's food diversity mode to %s
 solwarly.command.mode.true=Warly Mode
 solwarly.command.mode.false=Default Mode
 solwarly.command.mode.default=Follow Configuration
-
 item.solwarly.spice.creative.name=Creative Mode Seasoning
 solwarly.book.grinder=Spice Grinding Mill
 solwarly.book.grinder.1=Right-click to insert whole recipe batches. Empty-hand right-click retrieves both inputs. Each batch takes 3 seconds.
@@ -202,7 +276,6 @@ solwarly.book.grinder.2=Top and sides insert or retrieve ingredients; the bottom
 solwarly.book.grinder.3=An ingredient shared by single- and two-input recipes starts the animation, waits 5 seconds, then processes alone. Continuous batches skip the wait. Redstone forces single input while unbound.
 solwarly.book.grinder.4=Sneak-right-click with a single powder to bind its recipes, or with an empty hand to unbind. Binding overrides redstone and waiting. A rotating preview shows products and ingredients.
 solwarly.book.grinder.5=Expelled items go into a configured bottom hopper or pipe first; leftovers drop. Foods accept up to two accompaniments. Powders cannot combine with accompaniments.
-
 solwarly.spice.accompaniment=Use as an accompaniment by crafting with food
 solwarly.book.combined_accompaniments=Double Accompaniment Flavor
 solwarly.book.any_accompaniments=Any two accompaniments count as this flavor.

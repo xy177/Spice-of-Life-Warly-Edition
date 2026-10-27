@@ -16,43 +16,43 @@ public final class Localization {
 		assert location != null;
 		return keyString(domain, location.getPath() + "." + path);
 	}
-	
-	/** e.g. keyString("tooltip", "eaten_status.not_eaten_1") -> "tooltip.solcarrot.eatenStatus.not_eaten_1") */
+
+	/** e.g. keyString("tooltip", "eaten_status.not_eaten_1") -> "tooltip.solwarly.eatenStatus.not_eaten_1") */
 	public static String keyString(String domain, String path) {
-		return domain + "." + SOLWarly.LEGACY_ID + "." + path;
+		return domain + "." + SOLWarly.MOD_ID + "." + path;
 	}
-	
+
 	@SideOnly(Side.CLIENT)
 	public static String localized(String domain, IForgeRegistryEntry entry, String path, Object... args) {
 		return I18n.format(keyString(domain, entry, path), args);
 	}
-	
+
 	public static ITextComponent localizedComponent(String domain, IForgeRegistryEntry entry, String path, Object... args) {
 		return new TextComponentTranslation(keyString(domain, entry, path), args);
 	}
-	
+
 	@SideOnly(Side.CLIENT)
 	public static String localized(String domain, String path, Object... args) {
 		return I18n.format(keyString(domain, path), args);
 	}
-	
+
 	public static ITextComponent localizedComponent(String domain, String path, Object... args) {
 		return new TextComponentTranslation(keyString(domain, path), args);
 	}
-	
+
 	@SideOnly(Side.CLIENT)
 	public static String localizedQuantity(String domain, String path, int number) {
 		return number == 1
 			? I18n.format(keyString(domain, path + ".singular"))
 			: I18n.format(keyString(domain, path + ".plural"), number);
 	}
-	
+
 	public static ITextComponent localizedQuantityComponent(String domain, String path, int number) {
 		return number == 1
 			? new TextComponentTranslation(keyString(domain, path + ".singular"))
 			: new TextComponentTranslation(keyString(domain, path + ".plural"), number);
 	}
-	
+
 	public static String formatBigNumber(int number) {
 		if (number < 1000) {
 			return "" + number;
@@ -62,6 +62,6 @@ public final class Localization {
 			return Math.round(number / 1000F) + "k";
 		}
 	}
-	
+
 	private Localization() {}
 }

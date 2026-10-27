@@ -38,26 +38,15 @@ public final class DietRuntime {
     }
     public static void ensureCatalog() { if (!FoodCatalog.isReady()) FoodCatalog.build(); }
     public static void initialize(EntityPlayer player) {
-        DietData data = DietCapability.get(player);
-        if (data == null || data.initialized) return;
-        ensureCatalog();
-        FoodList legacy = FoodList.get(player);
-        for (FoodInstance food : legacy.getEatenFoods()) {
-            if (legacy.getConfigInfo().shouldCount(food.getItemStack()))
-                data.migrateFood(food.encode(), FoodCatalog.coefficient(food.getItemStack()));
-        }
-        if (!legacy.getEatenFoods().isEmpty()) {
-            data.legacyHealthFloor = legacy.getProgressInfo().milestonesAchieved() * 2.0 * SOLWarlyConfig.heartsPerMilestone;
-        }
-        net.minecraft.entity.ai.attributes.AttributeModifier old = player.getEntityAttribute(net.minecraft.entity.SharedMonsterAttributes.MAX_HEALTH)
-            .getModifier(MaxHealthHandler.MILESTONE_HEALTH_MODIFIER_ID);
-        if (old != null) data.legacyHealthFloor = Math.max(data.legacyHealthFloor, old.getAmount() - 2 * (SOLWarlyConfig.baseHearts - 10));
-        data.initialized = true;
+        DietData data=DietCapability.get(player);
+        if(data==null || data.initialized)return;
+        ensureCatalog(); data.initialized=true;
     }
     public static void eat(EntityPlayer player, net.minecraft.item.ItemStack food) {
         if (player.world.isRemote) return;
         initialize(player);
         String id = FoodCatalog.id(food);
+        DietCapability.get(player).markTasted(id);
         AppetiteData appetite = appetite(player.world);
         appetite.refresh(Math.floorDiv(player.getServer().getWorld(0).getWorldTime(), 24000),
             player.getServer().getCurrentPlayerCount(), FoodCatalog.candidates(), player.world.rand);
@@ -66,7 +55,7 @@ public final class DietRuntime {
         boolean craved = appetite.state(id) > 0;
         double repeat = craved ? 1 : data.warlyMultiplier(id, clock);
         if (!craved) data.recordWarlyMeal(id, clock);
-        if (!FoodList.get(player).getConfigInfo().shouldCount(food)) return;
+        if (!FoodRules.local().shouldCount(food)) return;
         FlavorAPI.Flavor flavor = FlavorAPI.resolve(food);
         double base = FoodCatalog.coefficient(food);
         data.eat(id, flavor.id, base, contribution(player, food, base * appetite.multiplier(id) * flavor.diversityMultiplier * repeat), DietConfig.recentCount);
@@ -126,7 +115,7 @@ public final class DietRuntime {
         for (String id : FoodCatalog.ids()) values.setDouble(id, FoodCatalog.coefficient(FoodCatalog.stack(id)));
         tag.setTag("coefficients", values);
         List<Double> eligible = new ArrayList<>();
-        ProgressInfo.ConfigInfo rules = FoodList.get(player).getConfigInfo();
+        FoodRules rules = FoodRules.local();
         for (String id : FoodCatalog.ids()) if (rules.shouldCount(FoodCatalog.stack(id))) eligible.add(values.getDouble(id));
         double[] boundaries = FoodQuality.boundaries(eligible, DietConfig.snackBoundary, DietConfig.mealBoundary, DietConfig.cuisineBoundary);
         for (int i = 0; i < boundaries.length; i++) tag.setDouble("quality" + i, boundaries[i]);
@@ -142,11 +131,13 @@ public final class DietRuntime {
         tag.setDouble("boringMultiplier", DietConfig.boringMultiplier);
         tag.setTag("cumulativeRewards", strings(DietConfig.cumulativeRewards));
         tag.setTag("attributes", strings(DietConfig.attributes)); tag.setTag("effects", strings(DietConfig.effects));
+        tag.setTag("foodRules", FoodRules.snapshot());
         tag.setTag("spices", com.xy177.solwarly.spice.SpiceConfig.snapshot());
         tag.setTag("customSpices", com.xy177.solwarly.spice.CustomSpices.snapshot());
         return tag;
     }
     public static void readSnapshot(EntityPlayer player, NBTTagCompound tag) {
+        FoodRules.readSnapshot(tag.getCompoundTag("foodRules"));
         DietCapability.get(player).deserializeNBT(tag.getCompoundTag("diet"));
         clientAppetite.readFromNBT(tag.getCompoundTag("appetite"));
         clientCoefficients.clear();

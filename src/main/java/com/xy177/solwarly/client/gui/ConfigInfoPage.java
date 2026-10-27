@@ -1,81 +1,31 @@
-// Modified by xy177 on 2026-10-10 for Spice of Life Warly Edition; upstream LGPL 2.1.
+// Warly Edition configuration overview, by xy177, 2026-10-27; LGPL-2.1.
 package com.xy177.solwarly.client.gui;
 
 import com.xy177.solwarly.client.FoodItemStacks;
-import com.xy177.solwarly.client.gui.elements.UIElement;
-import com.xy177.solwarly.client.gui.elements.UIImage;
-import com.xy177.solwarly.tracking.FoodInstance;
-import com.xy177.solwarly.tracking.ProgressInfo;
-
-import java.awt.*;
-
-import static com.xy177.solwarly.lib.Localization.localized;
+import com.xy177.solwarly.client.gui.elements.UILabel;
+import net.minecraft.client.resources.I18n;
+import java.awt.Rectangle;
 
 final class ConfigInfoPage extends Page {
-	ConfigInfoPage(FoodData foodData, Rectangle frame) {
-		super(frame, localized("gui", "food_book.config"));
-		
-		ProgressInfo.ConfigInfo configInfo = foodData.progressInfo.configInfo;
-		
-		int totalFoods = FoodItemStacks.getAllFoods().size();
-		int validFoods = foodData.validFoods.size();
-		int cheapFoods = totalFoods - validFoods;
-		int eatenCheapFoods = (int) foodData.foodList.getEatenFoods().stream()
-			.map(FoodInstance::getItemStack)
-			.filter(food -> configInfo.isAllowed(food) && !configInfo.isHearty(food))
-			.count();
-		
-		{
-			UIImage drumstickIcon = icon(GuiFoodBook.drumstickImage);
-			
-			int minValue = configInfo.minimumFoodValue;
-			String minValueDesc = "" + (minValue / 2);
-			if (minValue % 2 == 1) {
-				minValueDesc += ".5";
-			}
-			
-			UIElement minValueStat = statWithIcon(drumstickIcon, minValueDesc, localized("gui", "food_book.config.minimum_food_value"));
-			minValueStat.tooltip = localized("gui", "food_book.config.tooltip.minimum_food_value");
-			mainStack.addChild(minValueStat);
-		}
-		
-		{
-			UIImage cheapIcon = icon(GuiFoodBook.spiderEyeImage);
-			cheapIcon.setWidth(12);
-			
-			UIElement cheapStat = statWithIcon(
-				cheapIcon,
-				fraction(eatenCheapFoods, cheapFoods),
-				localized("gui", "food_book.config.eaten_cheap_foods")
-			);
-			cheapStat.tooltip = localized("gui", "food_book.config.tooltip.eaten_cheap_foods", cheapFoods, eatenCheapFoods);
-			mainStack.addChild(cheapStat);
-		}
-		
-		mainStack.addChild(makeSeparatorLine());
-		
-		{
-			boolean hasWhitelist = configInfo.hasWhitelist();
-			String listKey = hasWhitelist ? "whitelist" : "blacklist";
-			
-			UIImage listIcon = icon(hasWhitelist ? GuiFoodBook.whitelistImage : GuiFoodBook.blacklistImage);
-			
-			int allFoods = FoodItemStacks.getAllFoodsIgnoringBlacklist().size();
-			int allowedFoods = FoodItemStacks.getAllFoods().size();
-			String fraction = hasWhitelist
-				? fraction(allowedFoods, allFoods)
-				: fraction(allFoods - allowedFoods, allFoods);
-			UIElement listStat = statWithIcon(
-				listIcon,
-				fraction,
-				localized("gui", "food_book.config." + listKey)
-			);
-			listStat.tooltip = localized("gui", "food_book.config.tooltip." + listKey);
-			mainStack.addChild(listStat);
-		}
-		
-		mainStack.addChild(makeSeparatorLine());
-		
-		updateMainStack();
-	}
+    ConfigInfoPage(FoodData data, Rectangle frame) {
+        super(frame, I18n.format("gui.solwarly.food_book.config"));
+        int total = FoodItemStacks.getAllFoodsIgnoringBlacklist().size();
+        int allowed = FoodItemStacks.getAllFoods().size();
+        long eatenCheap = data.foodList.getEatenFoods().stream()
+            .map(food -> food.getItemStack())
+            .filter(food -> com.xy177.solwarly.diet.FoodRules.current().isAllowed(food) && !com.xy177.solwarly.diet.FoodRules.current().isHearty(food)).count();
+        boolean whitelist = com.xy177.solwarly.diet.FoodRules.current().hasWhitelist();
+        row("minimum_food_value", com.xy177.solwarly.lib.DisplayNumbers.format(com.xy177.solwarly.diet.FoodRules.current().minimumFoodValue/2.0));
+        row("eaten_cheap_foods", eatenCheap+"/"+(allowed-data.validFoods.size()));
+        row("hearty_fraction", data.validFoods.size()+"/"+allowed);
+        row(whitelist ? "whitelist" : "blacklist", (whitelist ? allowed : total-allowed)+"/"+total);
+        updateMainStack();
+    }
+
+    private void row(String key, String value) {
+        UILabel label = new UILabel(I18n.format("gui.solwarly.food_book.config."+key)+": "+value, contentWidth);
+        if (!key.equals("hearty_fraction") && !key.equals("eaten_cheap_foods"))
+            label.tooltip = I18n.format("gui.solwarly.food_book.config.tooltip."+key);
+        mainStack.addChild(label);
+    }
 }

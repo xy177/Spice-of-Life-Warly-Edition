@@ -10,18 +10,18 @@ import net.minecraftforge.fml.relauncher.Side;
 
 @Mod.EventBusSubscriber(modid = SOLWarly.MOD_ID)
 public final class PacketHandler {
-	public static final SimpleNetworkWrapper channel = NetworkRegistry.INSTANCE.newSimpleChannel(SOLWarly.LEGACY_ID);
-	
+	public static final SimpleNetworkWrapper channel = NetworkRegistry.INSTANCE.newSimpleChannel(SOLWarly.MOD_ID);
+
 	private static int packetID = 0;
-	
+
 	@SubscribeEvent
 	public static void preInit(SOLWarly.PreInitializationEvent e) {
 		channel.registerMessage(MessageFoodList.Handler.class, MessageFoodList.class, nextID(), Side.CLIENT);
 	}
-	
+
 	private static int nextID() {
 		return packetID++;
 	}
-	
+
 	private PacketHandler() {}
 }

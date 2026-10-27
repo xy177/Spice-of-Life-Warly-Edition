@@ -1,4 +1,7 @@
-// Modified by xy177 on 2026-10-10 for Spice of Life Warly Edition; upstream LGPL 2.1.
+// Adapted from Spice of Life: Apple Pie Edition (2d9de8b8d045b1f9b93940b681c74021d326f207); LGPL-2.1.
+// Modified by xy177 on 2026-10-27 for Warly Edition.
+// Upstream: https://github.com/txnimc/Spice-of-Life-Apple-Pie/blob/2d9de8b8d045b1f9b93940b681c74021d326f207/src/main/java/com/tarinoita/solsweetpotato/client/gui/ItemListPage.java
+// Earlier shared ancestry and notices are recorded in THIRD_PARTY_NOTICES.md.
 package com.xy177.solwarly.client.gui;
 
 import com.xy177.solwarly.client.gui.elements.UIItemStack;
@@ -13,7 +16,7 @@ final class ItemListPage extends Page {
 	private static final int rowsPerPage = 6;
 	private static final int itemsPerPage = itemsPerRow * rowsPerPage;
 	private static final int itemSpacing = UIItemStack.size + 4;
-	
+
 	static List<ItemListPage> pages(Rectangle frame, String header, List<ItemStack> items) {
 		List<ItemListPage> pages = new ArrayList<>();
 		for (int startIndex = 0; startIndex < items.size(); startIndex += ItemListPage.itemsPerPage) {
@@ -22,7 +25,7 @@ final class ItemListPage extends Page {
 		}
 		return pages;
 	}
-	
+
 	ItemStack itemAt(int x, int y) {
         for (com.xy177.solwarly.client.gui.elements.UIElement child : children)
             if (child instanceof UIItemStack && child.frame.contains(x, y)) return ((UIItemStack) child).itemStack;
@@ -30,15 +33,15 @@ final class ItemListPage extends Page {
     }
     private ItemListPage(Rectangle frame, String header, List<ItemStack> items) {
 		super(frame, header);
-		
+
 		int minX = (1 - itemsPerRow) * itemSpacing / 2;
 		int minY = (1 - rowsPerPage) * itemSpacing / 2 - 4;
-		
+
 		for (int i = 0; i < items.size(); i++) {
 			ItemStack itemStack = items.get(i);
 			int x = minX + itemSpacing * (i % itemsPerRow);
 			int y = minY + itemSpacing * ((i / itemsPerRow) % rowsPerPage);
-			
+
 			UIItemStack view = new UIItemStack(itemStack);
             java.util.List<com.xy177.solwarly.spice.SpiceKind> kinds = com.xy177.solwarly.spice.Seasoning.components(itemStack);
             if (com.xy177.solwarly.spice.Seasoning.sideUses(kinds) > 1) {

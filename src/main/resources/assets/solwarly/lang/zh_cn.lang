@@ -1,3 +1,80 @@
+# Tooltips
+# Commands
+# Messages
+# Items
+# GUIs
+# Config GUI
+tooltip.solwarly.hearty.not_eaten=还没尝过呢! 尝起来怎么样?
+tooltip.solwarly.hearty.eaten=已食用: 用于增加生命值
+tooltip.solwarly.cheap.eaten=已食用: 没有明显效果
+tooltip.solwarly.cheap=该食物不足以提升您的生命值.
+tooltip.solwarly.disabled.blacklist=该食物已被加入黑名单, 因此无法用于增加生命值.
+tooltip.solwarly.disabled.whitelist=该食物未被加入白名单, 因此无法用于增加生命值.
+tooltip.solwarly.disabled.eaten=已食用: 没有明显效果
+command.solwarly.foodlist.size.usage=/foodlist size [player]
+command.solwarly.foodlist.clear.usage=/foodlist clear [player]
+command.solwarly.foodlist.sync.usage=/foodlist sync [player]
+command.solwarly.foodlist.no_permissions=您没有将此命令应用于其他玩家的权限!
+command.solwarly.foodlist.size.desc.foods_eaten.singular=您已经品尝了1种独特的食物!
+command.solwarly.foodlist.size.desc.foods_eaten.plural=您已经品尝了%s种独特的食物!
+command.solwarly.foodlist.clear.success=食物清单已重置!
+command.solwarly.foodlist.sync.success=食物清单已同步!
+message.solwarly.chat_wrapper=[SoL: Warly] %s
+message.solwarly.hearts.singular=1颗红心
+message.solwarly.hearts.plural=%s颗红心
+message.solwarly.milestone_achieved=多么独特的味道! 您已经获得了%s!
+message.solwarly.finished.chat=您追寻独特食物的愿望终于得到满足.
+message.solwarly.finished.hotbar=您已经获得了%s. 您追寻独特食物的愿望终于得到满足.
+item.solwarly.food_book.name=食物清单
+gui.solwarly.food_book.stats=概要
+gui.solwarly.food_book.eaten_foods=已食用: %s
+gui.solwarly.food_book.uneaten_foods=未食用: %s
+gui.solwarly.food_book.config=配置
+gui.solwarly.food_book.fraction=%1$s/%2$s
+gui.solwarly.food_book.config.minimum_food_value=最低食用价值
+gui.solwarly.food_book.config.tooltip.minimum_food_value=将食物计入里程碑所需要提供的最低饥饿值.
+gui.solwarly.food_book.config.hearty_fraction=营养的食物
+gui.solwarly.food_book.config.tooltip.hearty_fraction=在%1$s种食物中有%2$s种食物的营养价值足以提升您的健康.
+gui.solwarly.food_book.config.eaten_cheap_foods=乏味的食物
+gui.solwarly.food_book.config.tooltip.eaten_cheap_foods=其中有%1$s种食物的营养价值不足以提升您的健康, 您已经食用了%2$s种.
+gui.solwarly.food_book.config.blacklist=黑名单食物
+gui.solwarly.food_book.config.whitelist=白名单食物
+gui.solwarly.food_book.config.tooltip.blacklist=黑名单中禁用的食物.
+gui.solwarly.food_book.config.tooltip.whitelist=白名单中允许的食物.
+config.solwarly.base_hearts=基础红心
+config.solwarly.is_food_tooltip_enabled=启用食物提示
+config.solwarly.should_show_progress_above_hotbar=在工具栏上方显示进度
+config.solwarly.should_show_uneaten_foods=显示未品尝食物
+config.solwarly.should_play_milestone_sounds=启用里程碑提示音
+config.solwarly.should_spawn_intermediate_particles=启用中间粒子效果
+config.solwarly.should_spawn_milestone_particles=启用里程碑粒子效果
+config.solwarly.food_blacklist=黑名单
+config.solwarly.food_whitelist=白名单(禁用黑名单)
+config.solwarly.minimum_food_value=最低食用价值
+config.solwarly.reset_on_death=死亡重置
+solwarly.interest.1=垂涎欲滴
+solwarly.interest.0=平平无奇
+solwarly.interest.-1=索然无味
+solwarly.tooltip.base=基础系数：%.2f
+solwarly.tooltip.next=下一次首次尝味累计：%.2f
+solwarly.tooltip.contribution=多样性贡献：%s
+solwarly.book.stats=饮食成长
+solwarly.book.cumulative=美食阅历：%s
+solwarly.book.diversity=多样性：%s
+solwarly.book.meals=最近进食：%s/%s 次
+solwarly.book.average=平均贡献：%s
+solwarly.book.variety=有效种类：%s
+solwarly.book.craved=垂涎欲滴
+solwarly.book.boring=索然无味
+solwarly.book.none=没有对应食物
+solwarly.book.cumulative_rewards=美食阅历奖励
+solwarly.book.cumulative_reward=%s 阅历：额外 %s 颗心
+solwarly.book.diversity_rewards=多样性奖励
+solwarly.command.usage=/solwarly status [玩家] | reload | regenerate <食物@子类型> | recalculate [玩家] | reset <玩家> | mode <玩家> <true|false|default>
+solwarly.command.regenerate_usage=/solwarly regenerate <食物@子类型>，只覆盖指定食物的系数。
+solwarly.command.reset_usage=/solwarly reset <玩家>
+solwarly.command.status=%s：美食阅历 %s，多样性 %s，最近进食 %s 次
+solwarly.command.done=饮食数据已更新。
 tile.solwarly.spice_grinder.name=调料研磨器
 item.solwarly.spice.name=调味料
 item.solwarly.spice.mixed.name=混合调味粉
@@ -156,7 +233,6 @@ solwarly.jei.mixing=混合调味粉
 solwarly.jei.seconds=每批 3 秒
 solwarly.jei.star_returned=下界之星返还
 solwarly.jei.not_consumed=不消耗
-
 solwarly.book.total_hearts=额外生命值：%s颗心
 solwarly.book.max_rewards=已达到最高档奖励
 solwarly.book.until_next=距离下一里程碑还差 %s
@@ -182,7 +258,6 @@ solwarly.book.diversity.next_score=下一级奖励所需分数：%s
 solwarly.book.diversity.next_reward=下一级多样性奖励：%s
 solwarly.book.diversity.maximum_score=最高奖励所需分数：%s
 solwarly.book.diversity.maximum_reward=最高多样性奖励：%s
-
 item.solwarly.lunchbag.name=午餐袋
 item.solwarly.lunchbox.name=午餐盒
 item.solwarly.golden_lunchbox.name=金午餐盒
@@ -194,7 +269,6 @@ solwarly.command.mode_set=已将 %s 的食物多样性模式切换为 %s
 solwarly.command.mode.true=沃利模式
 solwarly.command.mode.false=默认模式
 solwarly.command.mode.default=与配置文件同步
-
 item.solwarly.spice.creative.name=创造模式调味料
 solwarly.book.grinder=调料研磨器
 solwarly.book.grinder.1=右键按每批用量投入原料；空手右键取回两个输入槽的原料。每批制作需要3秒。
@@ -202,7 +276,6 @@ solwarly.book.grinder.2=顶部和侧面可输入、取回原料；底部只取�
 solwarly.book.grinder.3=单、双原料配方重合时先工作等待5秒，再制作单原料。连续制作不重复等待；未绑定时红石信号强制单输入。
 solwarly.book.grinder.4=手持单种调味粉潜行右键绑定配方，空手潜行右键解除。绑定优先于红石，忽略等待；上方虚影轮换展示成品及原料。
 solwarly.book.grinder.5=被送出的原料、成品及容器优先放入下方已配置漏斗或管道，放不下的部分才掉落。普通食物最多加两份佐料；粉末与佐料互斥。
-
 solwarly.spice.accompaniment=可作为佐料，与食物合成
 solwarly.book.combined_accompaniments=双佐料口味
 solwarly.book.any_accompaniments=任意两份佐料均可

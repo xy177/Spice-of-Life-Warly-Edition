@@ -11,17 +11,17 @@ final class CommandClearFoodList extends CommandFoodList.SubCommand {
 	public String getName() {
 		return "clear";
 	}
-	
+
 	@Override
 	void execute(ICommandSender sender, EntityPlayer player, FoodList foodList) {
 		foodList.clearFood();
 		com.xy177.solwarly.diet.DietData diet = com.xy177.solwarly.diet.DietCapability.get(player);
-		if (diet != null) diet.reset(false);
+		if (diet != null) diet.reset();
 		CapabilityHandler.syncFoodList(player);
-		
+
 		showMessage(sender, localizedComponent("success"));
 	}
-	
+
 	@Override
 	public int getRequiredPermissionLevel() {
 		return 2;

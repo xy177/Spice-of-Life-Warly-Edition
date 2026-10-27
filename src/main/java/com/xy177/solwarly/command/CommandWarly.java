@@ -24,7 +24,6 @@ public final class CommandWarly extends CommandBase {
         if (!admin) return Collections.emptyList();
         if (args.length == 2 && args[0].equals("regenerate")) return getListOfStringsMatchingLastWord(args, FoodCatalog.ids());
         if (args.length == 3 && args[0].equals("mode")) return getListOfStringsMatchingLastWord(args, "true", "false", "default");
-        if (args.length == 3 && args[0].equals("reset")) return getListOfStringsMatchingLastWord(args, "keep-floor", "clear-floor");
         return Collections.emptyList();
     }
     @Override public boolean isUsernameIndex(String[] args, int index) {
@@ -47,7 +46,7 @@ public final class CommandWarly extends CommandBase {
                     com.xy177.solwarly.spice.SpiceRegistry.sweet.removeAttributesModifiersFromEntity(player, player.getAttributeMap(), sweet.getAmplifier());
                     com.xy177.solwarly.spice.SpiceRegistry.sweet.applyAttributesModifiersToEntity(player, player.getAttributeMap(), sweet.getAmplifier());
                 }
-                DietCapability.get(player).trim(DietConfig.recentCount); FoodList.get(player).updateProgressInfo(); CapabilityHandler.syncFoodList(player);
+                DietCapability.get(player).trim(DietConfig.recentCount);  CapabilityHandler.syncFoodList(player);
             }
         } else if (action.equals("regenerate")) {
             if (args.length != 2 || !FoodCatalog.ids().contains(args[1])) throw new WrongUsageException("solwarly.command.regenerate_usage");
@@ -70,14 +69,13 @@ public final class CommandWarly extends CommandBase {
             return;
         } else {
             if (!Arrays.asList("status", "reset", "recalculate").contains(action)) throw new WrongUsageException(getUsage(sender));
-            if (args.length > (action.equals("reset") ? 3 : 2)) throw new WrongUsageException(getUsage(sender));
+            if (args.length > 2) throw new WrongUsageException(getUsage(sender));
             EntityPlayerMP player = args.length >= 2 ? getPlayer(server, sender, args[1]) : getCommandSenderAsPlayer(sender);
             if (player != sender.getCommandSenderEntity() && !sender.canUseCommand(2, getName())) throw new CommandException("commands.generic.permission");
             DietRuntime.initialize(player); DietData data = DietCapability.get(player);
             if (action.equals("reset")) {
-                if (args.length != 3 || !(args[2].equals("keep-floor") || args[2].equals("clear-floor")))
-                    throw new WrongUsageException("solwarly.command.reset_usage");
-                data.reset(args[2].equals("clear-floor")); FoodList.get(player).clearFood();
+                if (args.length != 2) throw new WrongUsageException("solwarly.command.reset_usage");
+                data.reset();
             } else if (action.equals("recalculate")) data.recalculate(id -> {
                 net.minecraft.item.ItemStack food = FoodCatalog.stack(id);
                 return food.isEmpty() ? Double.NaN : FoodCatalog.coefficient(food);

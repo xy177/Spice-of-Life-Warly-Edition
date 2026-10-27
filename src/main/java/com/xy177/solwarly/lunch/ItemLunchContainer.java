@@ -86,7 +86,7 @@ public final class ItemLunchContainer extends Item {
         double scale = client ? DietRuntime.clientScale : DietConfig.scale;
         AppetiteData appetite = DietRuntime.appetite(player.world);
         return select(inventory, food -> {
-            if (!FoodList.get(player).getConfigInfo().shouldCount(food)) return diet.diversity(extra, scale);
+            if (!FoodRules.current().shouldCount(food)) return diet.diversity(extra, scale);
             String id = FoodCatalog.id(food);
             FlavorAPI.Flavor flavor = FlavorAPI.resolve(food);
             double base = client ? DietRuntime.clientCoefficients.getOrDefault(id, 0.0) : FoodCatalog.coefficient(food);

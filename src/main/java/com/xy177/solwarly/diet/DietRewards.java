@@ -9,6 +9,25 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public final class DietRewards {
+    private static final UUID EXPERIENCE_HEALTH=UUID.nameUUIDFromBytes("solwarly:experience_health".getBytes(StandardCharsets.UTF_8));
+    public static void update(EntityPlayer player) {
+        if(player.world.isRemote)return;
+        DietRuntime.initialize(player);
+        DietData data=DietCapability.get(player);
+        if(data==null)return;
+        IAttributeInstance attribute=player.getEntityAttribute(net.minecraft.entity.SharedMonsterAttributes.MAX_HEALTH);
+        if(attribute==null)return;
+        AttributeModifier previous=attribute.getModifier(EXPERIENCE_HEALTH);
+        double amount=2.0*(com.xy177.solwarly.SOLWarlyConfig.baseHearts-10)+cumulativeHealth(data.cumulative());
+        if(previous==null || previous.getAmount()!=amount) {
+            if(previous!=null)attribute.removeModifier(previous);
+            AttributeModifier modifier=new AttributeModifier(EXPERIENCE_HEALTH,"solwarly:experience_health",amount,0);
+            attribute.applyModifier(modifier);
+        }
+        updateAttributes(player);refreshEffects(player);
+        if(player.getHealth()>player.getMaxHealth())player.setHealth(player.getMaxHealth());
+    }
+
     private static final String PREFIX = "solwarly:diversity:";
     private static final Map<EntityPlayer, Map<Potion, PotionEffect>> ownedEffects = new WeakHashMap<>();
     public static boolean reachedFinalCumulativeTier(double score) {

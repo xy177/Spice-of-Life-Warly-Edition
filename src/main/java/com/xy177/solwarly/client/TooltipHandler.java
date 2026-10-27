@@ -1,7 +1,7 @@
-// Derived from Spice of Life: Carrot Edition; original contributors retain copyright.
-// Modified by xy177 on 2026-10-13 for Spice of Life Warly Edition.
-// Upstream source: https://github.com/Cazsius/Spice-of-Life-Carrot-Edition/blob/3fbe133834091bbbc73ba0f37cf582d2bb66b10d/src/main/java/com/cazsius/solcarrot/client/TooltipHandler.java
-// License: LGPL-2.1; see LICENSE.txt and THIRD_PARTY_NOTICES.md.
+// Adapted from Spice of Life: Apple Pie Edition (2d9de8b8d045b1f9b93940b681c74021d326f207); LGPL-2.1.
+// Modified by xy177 on 2026-10-27 for Warly Edition.
+// Upstream: https://github.com/txnimc/Spice-of-Life-Apple-Pie/blob/2d9de8b8d045b1f9b93940b681c74021d326f207/src/main/java/com/tarinoita/solsweetpotato/client/TooltipHandler.java
+// Earlier shared ancestry and notices are recorded in THIRD_PARTY_NOTICES.md.
 package com.xy177.solwarly.client;
 
 import com.xy177.solwarly.SOLWarly;
@@ -39,9 +39,8 @@ public final class TooltipHandler {
         String id = FoodCatalog.id(food);
         FlavorAPI.Flavor flavor = FlavorAPI.resolve(food);
         boolean eaten = legacy.hasEaten(food) || diet != null && diet.hasTriedFood(id);
-        boolean tried = diet != null && diet.hasTried(id, flavor.id)
-            || flavor.id.equals("plain") && legacy.hasEaten(food) && (diet == null || !diet.hasTriedFood(id));
-        boolean eligible = legacy.getConfigInfo().shouldCount(food);
+        boolean tried = diet != null && diet.hasTried(id, flavor.id);
+        boolean eligible = FoodRules.current().shouldCount(food);
         Double base = DietRuntime.clientCoefficients.get(id);
         String key = historyKey(eaten, eligible, tried, base == null ? 0 : base, DietRuntime.clientQualityBoundaries);
         event.getToolTip().add((!eaten || !tried ? TextFormatting.DARK_AQUA : eligible ? TextFormatting.DARK_GREEN : TextFormatting.DARK_GRAY)

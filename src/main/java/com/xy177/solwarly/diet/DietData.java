@@ -7,7 +7,7 @@ import java.util.*;
 
 public final class DietData implements INBTSerializable<NBTTagCompound> {
     public boolean initialized;
-    public double legacyHealthFloor;
+    private final Set<String> tastedFoods = new LinkedHashSet<>();
     private final Map<String, Double> bases = new LinkedHashMap<>();
     private final Map<String, Double> fractions = new HashMap<>();
     private final Map<String, Set<String>> flavors = new LinkedHashMap<>();
@@ -48,6 +48,7 @@ public final class DietData implements INBTSerializable<NBTTagCompound> {
     }
 
     public double eat(String food, String flavor, double base, double contribution, int count) {
+        markTasted(food);
         flavor = Seasoning.canonicalFlavor(flavor);
         double gain = 0;
         Set<String> tried = flavors.computeIfAbsent(food, key -> new LinkedHashSet<>());
@@ -61,13 +62,9 @@ public final class DietData implements INBTSerializable<NBTTagCompound> {
         return gain;
     }
 
-    public void migrateFood(String food, double base) {
-        if (!bases.containsKey(food)) {
-            bases.put(food, base);
-            fractions.put(food, DietConfig.cumulativeFlavorFraction);
-            flavors.put(food, new LinkedHashSet<>(Collections.singleton("plain")));
-        }
-    }
+    public boolean markTasted(String food) { return tastedFoods.add(food); }
+    public boolean hasTastedFood(String food) { return tastedFoods.contains(food) || flavors.containsKey(food); }
+    public Set<String> tastedFoods() { Set<String> result=new LinkedHashSet<>(tastedFoods); result.addAll(flavors.keySet()); return result; }
 
     public void trim(int count) { meals.trim(count); }
     public int mealCount() { return meals.size(); }
@@ -101,9 +98,8 @@ public final class DietData implements INBTSerializable<NBTTagCompound> {
             .simulateFoodAdd(new Meal(food, flavor, contribution), count, extraFlavor, scale);
     }
 
-    public void reset(boolean clearFloor) {
-        bases.clear(); fractions.clear(); flavors.clear(); meals.clear(); initialized = true;
-        if (clearFloor) legacyHealthFloor = 0;
+    public void reset() {
+        tastedFoods.clear(); bases.clear(); fractions.clear(); flavors.clear(); meals.clear(); initialized = true;
     }
     public void recalculate(java.util.function.ToDoubleFunction<String> coefficient) {
         bases.replaceAll((food, previous) -> {
@@ -115,7 +111,6 @@ public final class DietData implements INBTSerializable<NBTTagCompound> {
     @Override public NBTTagCompound serializeNBT() {
         NBTTagCompound tag = new NBTTagCompound();
         tag.setInteger("version", initialized ? 2 : 0);
-        tag.setDouble("legacyHealthFloor", legacyHealthFloor);
         tag.setByte("warlyOverride", warlyOverride);
         NBTTagList repeatsTag = new NBTTagList();
         for (Map.Entry<String, Repeat> entry : repeats.entrySet()) {
@@ -134,6 +129,9 @@ public final class DietData implements INBTSerializable<NBTTagCompound> {
             entry.setTag("flavors", tastes); history.appendTag(entry);
         }
         tag.setTag("history", history);
+        NBTTagList tasted=new NBTTagList();
+        for(String food:tastedFoods) tasted.appendTag(new NBTTagString(food));
+        tag.setTag("tastedFoods",tasted);
         NBTTagList recent = new NBTTagList();
         for (Meal meal : meals) {
             NBTTagCompound entry = new NBTTagCompound();
@@ -145,8 +143,10 @@ public final class DietData implements INBTSerializable<NBTTagCompound> {
     }
     @Override public void deserializeNBT(NBTTagCompound tag) {
         bases.clear(); fractions.clear(); flavors.clear(); meals.clear(); repeats.clear();
+        tastedFoods.clear();
+        NBTTagList tasted=tag.getTagList("tastedFoods",8);
+        for(int i=0;i<tasted.tagCount();i++)tastedFoods.add(tasted.getStringTagAt(i));
         initialized = tag.getInteger("version") > 0;
-        legacyHealthFloor = tag.getDouble("legacyHealthFloor");
         warlyOverride = tag.hasKey("warlyOverride") ? tag.getByte("warlyOverride") : -1;
         NBTTagList repeatsTag = tag.getTagList("warlyRepeats", 10);
         for (int i = 0; i < repeatsTag.tagCount(); i++) {

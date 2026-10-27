@@ -1,7 +1,6 @@
-
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "solcarrot:items/food_book"
+    "layer0": "solwarly:items/food_book"
   }
 }

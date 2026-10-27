@@ -32,7 +32,6 @@ final class DietPage extends Page {
             I18n.format("solwarly.book.meals", diet.mealCount(), DietRuntime.clientRecentCount),
             I18n.format("solwarly.book.average", format(diet.average())),
             I18n.format("solwarly.book.variety", format(diet.variety(DietRuntime.clientExtraFlavor)))));
-        if (diet.legacyHealthFloor > cumulativeHealth(diet.cumulative())) statistics.add(I18n.format("solwarly.book.floor", format(diet.legacyHealthFloor / 2)));
         pages.add(new DietPage(frame, I18n.format("solwarly.book.stats"), statistics));
         SortedMap<Double, Double> cumulative = new TreeMap<>();
         for (String line : DietRuntime.clientCumulativeRewards) {
@@ -42,7 +41,7 @@ final class DietPage extends Page {
         SortedMap<Double, String> experienceTotals = new TreeMap<>();
         cumulative.forEach((tier, hearts) -> experienceTotals.put(tier, I18n.format("solwarly.book.total_hearts", format(hearts))));
         RewardPage rewardPage = new RewardPage(frame, I18n.format("solwarly.book.cumulative_rewards"));
-        rewardPage.addProgress(60, I18n.format("solwarly.book.cumulative_rewards"), diet.cumulative(), experienceTotals, cumulative, false, diet.legacyHealthFloor / 2);
+        rewardPage.addProgress(60, I18n.format("solwarly.book.cumulative_rewards"), diet.cumulative(), experienceTotals, cumulative, false);
         double score = diet.diversity(DietRuntime.clientExtraFlavor, DietRuntime.clientScale);
         SortedMap<Double, List<String>> rewards = new TreeMap<>();
         Map<Double, Double> health = new HashMap<>();
@@ -67,7 +66,7 @@ final class DietPage extends Page {
         }
         SortedMap<Double, String> diversityTotals = new TreeMap<>();
         rewards.forEach((tier, descriptions) -> diversityTotals.put(tier, String.join("\n", descriptions)));
-        rewardPage.addProgress(128, I18n.format("solwarly.book.diversity_rewards"), score, diversityTotals, health, true, 0);
+        rewardPage.addProgress(128, I18n.format("solwarly.book.diversity_rewards"), score, diversityTotals, health, true);
         pages.add(rewardPage);
         return pages;
     }

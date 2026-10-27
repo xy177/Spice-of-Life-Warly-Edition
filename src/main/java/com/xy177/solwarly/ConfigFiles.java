@@ -10,7 +10,7 @@ public final class ConfigFiles {
         File directory = new File(root, SOLWarly.MOD_ID);
         try {
             Files.createDirectories(directory.toPath());
-            for (String name : new String[] {"solcarrot.cfg", "solwarly.cfg", "solwarly-foods.cfg", "solwarly-spices.cfg", "solwarly-grinder.cfg"}) {
+            for (String name : new String[] {"solwarly-general.cfg", "solwarly.cfg", "solwarly-foods.cfg", "solwarly-spices.cfg", "solwarly-grinder.cfg"}) {
                 File source = new File(root, name), target = new File(directory, name);
                 if (source.isFile() && !target.exists()) Files.copy(source.toPath(), target.toPath());
             }

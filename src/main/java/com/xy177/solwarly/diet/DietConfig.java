@@ -38,7 +38,7 @@ public final class DietConfig {
         DietConfig.directory = directory;
         Configuration config = new Configuration(new File(directory, "solwarly.cfg"));
         config.load();
-        config.setCategoryComment("statistics", "饮食统计。原配置 solcarrot.cfg 的筛选与死亡规则仍生效。\nDietary statistics. Legacy filters and death settings remain in solcarrot.cfg.");
+        config.setCategoryComment("statistics", "饮食统计。筛选与死亡设置见 solwarly-general.cfg。\nDietary statistics. Filters and death settings are in solwarly-general.cfg.");
         warlyMode = config.getBoolean("warlyMode", "warlyMode", false,
             "是否全局启用沃利模式；玩家可用指令单独覆盖。\nWhether Warly Mode is enabled globally; players may override it with a command.");
         warlyDurationDays = config.getInt("repeatDurationDays", "warlyMode", 2, 1, 100,
